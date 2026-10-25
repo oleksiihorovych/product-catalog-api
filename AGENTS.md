@@ -18,6 +18,16 @@ Use one API host with four focused layers under `src/`, plus separate Worker hos
 
 Keep business rules out of controllers and SQL concerns out of Application. Do not expose EF entities or IQueryable as the public API. Select the storage implementation at startup through configuration; do not scatter mock/database switches through use cases.
 
+## Deliver complete functional slices
+
+- Implement one observable user capability end-to-end before moving to the next: full v1 listing, lookup by ID, protected description update, v2 pagination, then Kafka-backed change audit. The RabbitMQ business scenario remains deferred and must not block testing completed API capabilities.
+- A functional slice crosses the existing Domain/Application/Infrastructure/Api layers; this delivery order does not replace Layered Architecture or require a new framework. Do not implement all database access, then all services, then all controllers as separate delivery phases.
+- Include the slice's necessary schema/migration/seed, SQL and mock adapters, DI, validation/error handling, security, OpenAPI, tests and request examples. SQL behavior and mandatory tests are not deferred to a later infrastructure phase. Use only the dependencies needed for the current capability.
+- Keep bootstrap small. Introduce middleware, observability, Docker/CI support and safety checks when the first slice needs them; evolve them with subsequent slices rather than leaving every runnable setup or reliability check until the end.
+- For each completed slice, document how to start it, obtain deterministic demo data, send exact example requests and verify expected responses. Report the actual checks, commit hashes and what the user can test now. Unavailable external SQL or other dependencies must be reported as unverified, not hidden by mock-only results.
+- Preserve earlier slice behavior and regression checks. Separate bulk v1 performance, overall load validation and Kubernetes/cloud rollout as operational checkpoints; they do not replace business acceptance or require waiting for deferred features.
+- Keep atomic commits within a slice. Necessary endpoint/use-case/adapter wiring and tests belong together; a larger slice may contain several independently valid commits. Do not require extra user approval at each boundary unless the user explicitly asks to pause for review.
+
 ## SOLID and implementation practices
 
 - Keep each class focused; inject dependencies through constructors and depend on small interfaces at real boundaries.
