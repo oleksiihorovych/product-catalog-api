@@ -125,8 +125,7 @@ Build and run Mock mode on ARM64 or x64:
 docker compose up --build --detach
 ```
 
-Open `http://localhost:5080/swagger` and the v1 listing. Run `python3 scripts/smoke-api.py` for a
-read-only check of all demo values, Swagger/OpenAPI and 404 behavior (Python 3 required).
+Open `http://localhost:5080/swagger` and the v1 listing.
 If another API already uses that port,
 set `CATALOG_PORT=5081` before starting Compose. The runtime image uses a non-root user, has a
 liveness health check and no SDK. Compose drops capabilities, uses a read-only API filesystem
@@ -196,7 +195,9 @@ as a substitute for SQL Server.
   fast tests and migration/model consistency.
 - Real SQL Server tests on an isolated x64 runner with per-test disposable databases.
 - An x64 Docker build, full SQL Compose startup, explicit migration/seed, read-only API login,
-  exact catalog smoke checks and verification that the login has SELECT without INSERT/ALTER.
+  and verification that the login has SELECT without INSERT/ALTER.
+  Container readiness here uses the liveness health check; catalog behavior is covered by the
+  HTTP and SQL integration tests rather than a separate deployed-API smoke script.
 
 PR runs have read-only repository permissions and do not publish or deploy. Credentials are
 random per run and masked; no repository secret is required for these disposable local services.
