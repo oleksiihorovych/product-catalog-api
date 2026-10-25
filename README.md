@@ -38,3 +38,18 @@ dotnet run --project src/ProductCatalog.Api --launch-profile http
 
 The host listens on `http://localhost:5080`. Product endpoints are not implemented
 yet. No database, containers, or message brokers are needed to start the host.
+
+Errors are returned as Problem Details with a trace identifier. Unexpected errors
+never expose exception messages or stack traces in HTTP responses, including in
+Development. Full exception diagnostics remain in server logs.
+
+## Tests
+
+```sh
+dotnet test
+```
+
+HTTP integration tests use xUnit and `WebApplicationFactory`; no external services
+are needed. The test-only failure controller is registered by the test host and
+is not shipped as an application endpoint. Package versions are centrally pinned
+in `Directory.Packages.props`; committed NuGet lock files pin transitive dependencies.
