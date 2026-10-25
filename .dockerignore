@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/TestResults/
+.git/
+.github/
+.env
+.env.*
+**/appsettings.Local.json
+**/*.pfx
+**/*.p12
+**/*.key
+artifacts/
+.DS_Store

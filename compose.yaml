@@ -1,0 +1,22 @@
+name: product-catalog
+
+services:
+  api:
+    build: .
+    image: product-catalog-api:local
+    ports:
+      - "127.0.0.1:${CATALOG_PORT:-5080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Storage__Mode: Mock
+      AllowedHosts: "localhost;127.0.0.1;[::1]"
+      Catalog__MaxConcurrentListings: "4"
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
