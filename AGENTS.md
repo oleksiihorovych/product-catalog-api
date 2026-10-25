@@ -96,14 +96,23 @@ CI/CD and a real deployment are user-requested additions to the project scope. I
 
 ## Mandatory atomic commits
 
+- Apply the `reviewable-commits` skill when available. The rules here remain self-contained and apply even when that personal skill is unavailable.
 - After completing each atomic, independently reviewable unit of work, run the relevant checks and immediately create a Git commit before starting the next unit. This is the user's standing authorization to make local commits for completed work; do not repeatedly ask for permission to commit.
-- Examples of separate units: create the solution/project scaffold; add one middleware with its configuration; implement one endpoint; introduce a v1 controller; introduce a v2 controller/version; add one migration; add one messaging handler; add one CI workflow; update a coherent set of documentation or repository rules.
+- Examples of separate units: a runnable solution/project scaffold; one middleware with its configuration; one complete endpoint; a working v2 listing; one messaging handler; one CI workflow; a coherent documentation or repository-rule change. A migration belongs with the behavior that requires it unless independently useful and verifiable.
 - Choose the smallest complete behavior as the boundary. If a controller is introduced with its first endpoint, commit them together; later endpoints get their own commits. Do not split essential wiring, contracts or migrations into commits that leave the repository broken, and do not accumulate several finished endpoints into a single end-of-phase commit.
 - Include the unit's necessary tests and directly related documentation in the same commit. A completed unit should build and pass its applicable tests. If checks fail, fix the unit before committing; if verification is blocked by the environment, report the limitation explicitly and do not claim the unit is verified.
+- An endpoint commit should include the necessary DTOs, use case, storage adapters, DI, tests and request examples across layers. Do not create incomplete commits for each class or separate tests merely to increase the commit count. Commit boundaries follow finished behavior, without quotas for files, lines or number of commits.
 - Before staging, inspect `git status` and the diff. Stage only explicit paths/hunks belonging to the unit, then inspect `git diff --cached` and run `git diff --cached --check`. Exclude secrets, private context, generated artifacts and unrelated user changes. Avoid blanket `git add .` / `git add -A` and never discard other changes to obtain a clean tree.
 - Use short, descriptive English Conventional Commit messages, for example `chore: scaffold solution`, `feat(api): add exception middleware`, `feat(api): add v1 product listing`, `feat(api): add v2 pagination`, `test(api): cover description updates`, or `docs: define atomic commit workflow`.
+- For a nontrivial change, add a concise body explaining why it is needed, a material tradeoff and actual validation. A clear title is sufficient for a simple change. Avoid vague titles, file inventories, conversation transcripts and unsupported performance or production-readiness claims.
 - Verify that the commit succeeded and inspect the remaining status. Report commit hashes and any remaining relevant changes in the handoff. If Git identity, hooks or permissions block a commit, preserve the work and report the blocker; never invent an identity, disable hooks or claim a commit exists when it does not.
 - Do not defer all commits until the end of a task, create empty commits, fabricate intermediate history after the fact, or squash/amend completed units without an explicit request. Feature-branch push and PR creation are authorized by the workflow below; merge, release, deployment and visibility changes require their own user authorization.
+
+## AI assistance and engineering responsibility
+
+- Evaluate changes by correctness, clarity, maintainability and verified behavior; there is no target percentage of AI-generated code. Do not fabricate manual authorship, timestamps, attribution, human review or approval.
+- Include a brief factual AI-assistance note in PR descriptions: what AI helped implement or review, which checks actually ran, and what still awaits human verification. Do not repeat boilerplate AI labels in every commit or add invented authorship trailers. Use the existing Git identity.
+- Automated checks do not replace human acceptance. Mark a slice as awaiting verification until the user confirms it; the human reviewer should be able to understand, explain and maintain the submitted result.
 
 ## Feature branches, pull requests and human verification
 
