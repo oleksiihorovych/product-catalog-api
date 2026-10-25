@@ -21,11 +21,11 @@ GET {{baseUrl}}/swagger
 GET {{baseUrl}}/does-not-exist
 Accept: application/problem+json
 
-### Product lookup: currently 500 until SQL/Mock lookup adapters are completed; target 200
+### Product lookup: 200, same fields as the corresponding catalog entry
 GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
 Accept: application/json
 
-### Missing product: currently 500 until adapters are completed; target 404
+### Missing product: 404, problem details
 GET {{baseUrl}}/api/v1/products/ffffffff-ffff-ffff-ffff-ffffffffffff
 Accept: application/problem+json
 
