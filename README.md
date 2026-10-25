@@ -52,19 +52,20 @@ query parameters are supplied. It has no hidden limit, export operation or broke
 
 | Field | Contract |
 | --- | --- |
-| `id` | Positive signed 64-bit integer |
+| `id` | Nonempty GUID, serialized as a UUID string |
 | `name` | Nonblank, at most 200 characters |
 | `imgUri` | Absolute HTTP/HTTPS URI, at most 2048 characters |
 | `price` | Nonnegative decimal(18,2), serialized as a JSON number |
 | `description` | Nullable, at most 4000 characters |
 
-Clients must preserve 64-bit IDs; large IDs can exceed JavaScript's safe integer range.
+IDs are supplied by the application; SQL does not generate them. SQL ordering uses `uniqueidentifier` order, which differs from .NET GUID comparison for arbitrary values. Mock uses the same SQL ordering.
 The Product constructor rejects invalid state with `FluentValidation.ValidationException`;
 errors contain field names and stable `Product.*` codes. Limits live in `DomainConstants`.
 
-Demo products use IDs 1–23, names `Demo product 01` through `Demo product 23`, image URIs
-`https://example.com/products/{id}.jpg` and prices `id * 10.25`. Every third description is null;
-other descriptions are `Description for demo product {id:00}.`. ID 23 costs 235.75.
+Demo products use deterministic GUIDs `00000000-0000-0000-0000-000000000001` through
+`00000000-0000-0000-0000-000000000017` (hexadecimal suffixes 1–23), names `Demo product 01` through `Demo product 23`, image URIs
+`https://example.com/products/{number}.jpg` and prices `number * 10.25`. Every third description is null;
+other descriptions are `Description for demo product {number:00}.`. The last demo product costs 235.75.
 
 ## Streaming, limits and errors
 
@@ -136,3 +137,14 @@ or process-memory bounds. Verify those manually against the running application:
 - Check initial storage failures return safe errors; discard incomplete responses after transfer failures.
 
 Production capacity and memory bounds require separate measurements.
+
+## GUID identifier upgrade
+
+Product IDs now use `Guid` / SQL Server `uniqueidentifier`; numeric-ID clients must migrate.
+The original migration is retained. The GUID migration preserves every product and maps the
+old positive bigint to its hexadecimal value in the last 16 UUID digits, for example
+`23` becomes `00000000-0000-0000-0000-000000000017`. Seed uses the same mapping and remains
+repeatable. Existing ID order may change; no numeric-ID compatibility endpoint is provided.
+Back up an existing database before applying migrations. This migration is forward-only:
+rollback requires restoring the backup with the matching application version. SQL execution
+of this upgrade has not been verified against a live database.

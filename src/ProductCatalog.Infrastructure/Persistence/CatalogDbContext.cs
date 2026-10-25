@@ -13,7 +13,7 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
         var product = modelBuilder.Entity<Product>();
         product.ToTable("Products", "dbo", table =>
         {
-            table.HasCheckConstraint("CK_Products_Id", "[Id] > 0");
+            table.HasCheckConstraint("CK_Products_Id", "[Id] <> '00000000-0000-0000-0000-000000000000'");
             table.HasCheckConstraint("CK_Products_Price", "[Price] >= 0");
             table.HasCheckConstraint("CK_Products_Name", "LEN(LTRIM(RTRIM([Name]))) > 0");
         });

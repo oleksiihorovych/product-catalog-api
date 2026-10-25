@@ -12,7 +12,7 @@ public sealed class ProductCatalogApplicationServiceTests
     public async Task ListAll_ReturnsEveryRepositoryProductInOrder(int count)
     {
         var expected = Enumerable.Range(1, count)
-            .Select(id => new ProductDetails(id, $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, null))
+            .Select(id => new ProductDetails(TestConstants.CatalogProductId(id), $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, null))
             .ToArray();
         var repository = new StubRepository(expected);
         var service = new ProductCatalogApplicationService(repository);

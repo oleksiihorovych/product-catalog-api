@@ -24,7 +24,7 @@ public sealed class ProductsControllerTests
 
         Assert.Equal(cancellation.Token, service.ReceivedToken);
         Assert.Equal(Enumerable.Range(1, count).Select(id =>
-            new ProductResponse(id, $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, TestConstants.ProductDescription)), actual);
+            new ProductResponse(TestConstants.CatalogProductId(id), $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, TestConstants.ProductDescription)), actual);
     }
 
     private sealed class StubCatalogService(int count) : IProductCatalogApplicationService
@@ -47,7 +47,7 @@ public sealed class ProductsControllerTests
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                yield return new ProductDetails(id, $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, TestConstants.ProductDescription);
+                yield return new ProductDetails(TestConstants.CatalogProductId(id), $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, TestConstants.ProductDescription);
             }
         }
     }

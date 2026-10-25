@@ -9,8 +9,8 @@ internal sealed class ProductValidator : AbstractValidator<Product>
     private ProductValidator()
     {
         RuleFor(p => p.Id)
-            .GreaterThan(0)
-            .WithErrorCode("Product.Id.Positive");
+            .NotEmpty()
+            .WithErrorCode("Product.Id.Required");
 
         RuleFor(p => p.Name)
             .Cascade(CascadeMode.Stop)
