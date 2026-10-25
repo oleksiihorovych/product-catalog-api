@@ -16,12 +16,12 @@ src/
   ProductCatalog.Infrastructure/  Persistence and external adapters
   ProductCatalog.Api/             HTTP host and dependency composition
 tests/
-  ProductCatalog.Api.Tests/       In-process HTTP integration tests
+  ProductCatalog.UnitTests/       Isolated unit tests
 ```
 
 Application references Domain. Infrastructure references Application and Domain.
-Api references Application and Infrastructure for composition. The library
-projects are intentionally empty until the first functional slice needs them.
+Api references Application and Infrastructure for composition. Domain now includes the validated Product model and shared field constraints.
+Product construction uses a dedicated FluentValidation validator.
 
 ## Build
 
@@ -68,10 +68,9 @@ Development. Full exception diagnostics remain in server logs.
 dotnet test
 ```
 
-HTTP integration tests use xUnit and `WebApplicationFactory`; no external services
-are needed. The test-only failure controller is registered by the test host and
-is not shipped as an application endpoint. Package versions are centrally pinned
-in `Directory.Packages.props`; committed NuGet lock files pin transitive dependencies.
+The unit suite checks domain constraints, boundary values and validation error codes.
+It uses xUnit without starting a web host or connecting to external services. Shared sample
+values live in TestConstants. Package versions and transitive dependencies are pinned.
 
 ## Bootstrap human verification
 
@@ -93,7 +92,6 @@ dotnet run --project src/ProductCatalog.Api --launch-profile http
   part of the application.
 - Stop with Ctrl+C. Nothing needs resetting: bootstrap creates no database or seed.
 
-The same requests are collected in `ProductCatalog.http`. Test results cover
-startup, error responses, documentation visibility and test-only route isolation.
+The same requests are collected in `ProductCatalog.http`. The unit suite covers domain rules; startup and HTTP behavior require manual verification.
 Changes are reviewed through a feature-branch PR to `main`. Bootstrap awaits human
 verification; the first product slice is a separate PR after approval.

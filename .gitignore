@@ -22,3 +22,6 @@ artifacts/
 *.pfx
 *.p12
 *.key
+
+# Local agent instructions
+AGENTS.md
