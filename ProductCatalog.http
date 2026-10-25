@@ -20,3 +20,19 @@ GET {{baseUrl}}/swagger
 ### Unknown route: 404, application/problem+json, traceId
 GET {{baseUrl}}/does-not-exist
 Accept: application/problem+json
+
+### Product lookup: currently 500 until SQL/Mock lookup adapters are completed; target 200
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Missing product: currently 500 until adapters are completed; target 404
+GET {{baseUrl}}/api/v1/products/ffffffff-ffff-ffff-ffff-ffffffffffff
+Accept: application/problem+json
+
+### Invalid product ID: 400, validation problem
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000000
+Accept: application/problem+json
+
+### Malformed product ID: expected 400 from HTTP model binding (manual verification pending)
+GET {{baseUrl}}/api/v1/products/abc
+Accept: application/problem+json

@@ -8,6 +8,10 @@ namespace ProductCatalog.Infrastructure.Persistence;
 public sealed class SqlProductRepository(CatalogDbContext db) : IProductRepository
 {
     /// <inheritdoc/>
+    public Task<ProductDetails?> ReadByIdAsync (Guid id, CancellationToken cancellationToken) =>
+        throw new NotImplementedException("Product lookup is pending the S2 infrastructure stage.");
+
+    /// <inheritdoc/>
     public IAsyncEnumerable<ProductDetails> ReadAllAsync(CancellationToken cancellationToken) =>
         Stream(cancellationToken);
 

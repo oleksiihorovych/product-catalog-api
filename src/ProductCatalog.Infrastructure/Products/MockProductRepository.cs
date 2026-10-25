@@ -12,6 +12,10 @@ internal sealed class MockProductRepository : IProductRepository
         .ToArray();
 
     /// <inheritdoc/>
+    public Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        throw new NotImplementedException("Product lookup is pending the S2 infrastructure stage.");
+
+    /// <inheritdoc/>
     public async IAsyncEnumerable<ProductDetails> ReadAllAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
