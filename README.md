@@ -188,6 +188,28 @@ mock/SQL parity, one untracked query, decimal/Unicode round trips, committed rea
 closing connections and reads not blocking behind uncommitted writers. EF InMemory is not used
 as a substitute for SQL Server.
 
+## GitHub Actions
+
+`Catalog CI` runs on PRs to `main` and pushes to `main`:
+
+- Workflow syntax validation with a checksummed actionlint binary, locked restore, Release build,
+  fast tests and migration/model consistency.
+- Real SQL Server tests on an isolated x64 runner with per-test disposable databases.
+- An x64 Docker build, full SQL Compose startup, explicit migration/seed, read-only API login,
+  exact catalog smoke checks and verification that the login has SELECT without INSERT/ALTER.
+
+PR runs have read-only repository permissions and do not publish or deploy. Credentials are
+random per run and masked; no repository secret is required for these disposable local services.
+On `main` only, after all three jobs pass, the tested Docker image is transferred as a short-lived
+Actions artifact and published to `ghcr.io/<owner>/<repository>:<commit-sha>` without rebuilding.
+Only the publish job receives `packages: write`. It uses `GITHUB_TOKEN`, logs out afterward and
+records the immutable registry digest in the job summary. Registry publication must be verified
+on an actual main run; a successful PR cannot prove it. No mutable `latest` tag is used.
+
+GHCR is an artifact registry. Hosted deployment, staging configuration, container scanning/SBOM,
+Kubernetes rollout and operational load validation are subsequent work. Hosting is unselected;
+there is no placeholder deployment-success job and no external resources are provisioned.
+
 ## S1 human verification
 
 - Start Mock mode using the quick-start commands; open Swagger and execute the v1 listing.
