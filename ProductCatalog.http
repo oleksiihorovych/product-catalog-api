@@ -33,6 +33,18 @@ Accept: application/problem+json
 GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000000
 Accept: application/problem+json
 
-### Malformed product ID: expected 400 from HTTP model binding (manual verification pending)
+### Malformed product ID: 400 from HTTP model binding
 GET {{baseUrl}}/api/v1/products/abc
+Accept: application/problem+json
+
+### Null description: 200, description is null
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000003
+Accept: application/json
+
+### Last demo product: 200, price 235.75
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000017
+Accept: application/json
+
+### Numeric IDs are invalid after the GUID upgrade: 400
+GET {{baseUrl}}/api/v1/products/1
 Accept: application/problem+json

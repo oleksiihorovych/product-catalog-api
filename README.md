@@ -1,7 +1,7 @@
 # Product Catalog API
 
-A .NET 10 LTS product catalog with a complete, streamed v1 listing and SQL Server or Mock storage.
-Product lookup, description updates and paginated v2 listing are planned separately.
+A .NET 10 LTS product catalog with a complete, streamed v1 listing, product lookup by GUID,
+and SQL Server or Mock storage. Description updates and paginated v2 listing are planned separately.
 
 ## Build and run
 
@@ -20,6 +20,7 @@ Open `http://localhost:5080/swagger`; request examples are in `ProductCatalog.ht
 | Route | Result |
 | --- | --- |
 | `GET /api/v1/products` | `200`, every product ordered by ID; an empty catalog returns `[]` |
+| `GET /api/v1/products/{id}` | `200` with one product; invalid/empty GUID → `400`, unknown GUID → `404` |
 | `/health/live` | `200 Healthy`, independent of database availability |
 | `/swagger` | Local Swagger UI in Development |
 | `/openapi/v1.json` | Generated OpenAPI document in Development |
@@ -41,7 +42,9 @@ and HTTPS when exposing the API outside the local development environment.
 `ApplicationService` suffix; domain services use `DomainService` when domain logic requires
 one. There is currently no separate domain service.
 
-The product-specific repository exposes `ReadAllAsync` as a lazy `IAsyncEnumerable`.
+The product-specific repository exposes `ReadAllAsync` as a lazy `IAsyncEnumerable` and
+`ReadByIdAsync` as a nullable product lookup. Controllers are organized by scenario:
+`GetAllProductsController` and `GetProductByIdController`.
 It does not expose EF entities or `IQueryable` to HTTP consumers. Reads are projected without
 tracking or full-catalog materialization. The context must remain alive during enumeration.
 
@@ -66,6 +69,19 @@ Demo products use deterministic GUIDs `00000000-0000-0000-0000-000000000001` thr
 `00000000-0000-0000-0000-000000000017` (hexadecimal suffixes 1–23), names `Demo product 01` through `Demo product 23`, image URIs
 `https://example.com/products/{number}.jpg` and prices `number * 10.25`. Every third description is null;
 other descriptions are `Description for demo product {number:00}.`. The last demo product costs 235.75.
+
+### Product lookup
+
+`GET /api/v1/products/00000000-0000-0000-0000-000000000001` returns the same five fields
+as that product in the full listing, including a nullable description. SQL lookup filters by
+the primary key and projects a single read model; it does not enumerate the full catalog.
+Mock reads from its in-process demo catalog. No brokers or credentials are needed for Mock.
+
+Malformed or numeric IDs and the empty GUID return `400 ValidationProblemDetails`.
+A valid GUID with no matching product returns `404 ProblemDetails`. Errors include `traceId`.
+HTTP binding/validation runs before the action; Application also rejects `Guid.Empty` when
+called directly. Successful lookup responses use `Cache-Control: no-store`; the bulk listing's
+concurrency limit does not apply to lookup. GET endpoints remain public.
 
 ## Streaming, limits and errors
 
@@ -104,9 +120,9 @@ a seed failure does not undo applied schema changes. Schedule migration without 
 connections; it does not force-disconnect sessions.
 
 Switch to a runtime connection with SELECT permission on `dbo.Products`, then start the API
-using the quick-start command. Normal HTTP startup never migrates or seeds. SQL reads use one
-ordered query against the configured primary; do not enable EF retry-on-failure on this path
-without evaluating its full-result buffering. The configured command timeout is 120 seconds.
+using the quick-start command. Normal HTTP startup never migrates or seeds. SQL listing uses one
+ordered query against the configured primary; lookup uses a separate primary-key query.
+Do not enable EF retry-on-failure for the full listing without evaluating its full-result buffering. The configured command timeout is 120 seconds.
 Choose connection-pool and proxy limits using measurements.
 
 Use encrypted SQL connections. `TrustServerCertificate=true` is only suitable for a trusted
@@ -122,7 +138,7 @@ dotnet ef migrations has-pending-model-changes --project src/ProductCatalog.Infr
 ## Unit tests and manual verification
 
 The solution contains unit tests only; tests run without an HTTP host, database or broker. Tests cover domain invariants, service/repository delegation, complete
-controller output, lazy mapping, cancellation/disposal, source failures, exception handling
+controller output, GUID validation, Mock lookup/listing parity, lazy mapping, cancellation/disposal, source failures, exception handling
 and rate-limit error fallback. Shared sample values live in `TestConstants`.
 
 Unit tests do not prove routing, generated OpenAPI, SQL behavior, transport failure handling
@@ -130,13 +146,24 @@ or process-memory bounds. Verify those manually against the running application:
 
 - In Mock mode, request v1 and confirm 23 unique IDs in order, all five fields and the last price.
 - Repeat with `?page=1&pageSize=10`; v1 must still return all 23 products.
+- Request `/api/v1/products/00000000-0000-0000-0000-000000000001`: expect `200`, the same
+  fields as in the list and `Cache-Control: no-store`. Repeat with suffix `000000000003` for
+  a null description and `000000000017` for the last product.
+- Request `/api/v1/products/ffffffff-ffff-ffff-ffff-ffffffffffff`: expect `404`.
+- Request an empty GUID, `abc` or `1`: expect `400`. Verify errors are
+  `application/problem+json` with `traceId`, and empty GUID errors identify `id`.
+- Check Swagger describes the lookup ID as `string/uuid` and lists `200/400/404/500`.
 - Open health, Swagger and OpenAPI; request an unknown route with `Accept: application/problem+json`.
 - On a separate SQL database, migrate/seed twice and verify the same catalog using a read-only login.
 - On another fresh migrated database without seed, confirm `200` and `[]`.
 - Under saturated catalog admission, verify `429` for JSON and plain-text clients and independent liveness.
 - Check initial storage failures return safe errors; discard incomplete responses after transfer failures.
 
-Production capacity and memory bounds require separate measurements.
+A one-time local Mock HTTP check verified all 23 lookup responses against the listing,
+invalid/empty/numeric IDs, missing products, cache headers, OpenAPI, Swagger UI and health.
+This is a manual acceptance check, not an automated HTTP test suite. SQL lookup and the GUID
+migration have not been executed against a live database. Production capacity and memory
+bounds require separate measurements.
 
 ## GUID identifier upgrade
 
