@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using ProductCatalog.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+builder.Services.AddHealthChecks();
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>
@@ -16,6 +19,22 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUi(options =>
+    {
+        options.Path = "/swagger";
+        options.SwaggerRoutes.Add(new("v1", "/openapi/v1.json"));
+    });
+}
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    // Liveness must remain independent of future SQL and broker readiness checks.
+    Predicate = _ => false
+});
 
 app.MapControllers();
 
