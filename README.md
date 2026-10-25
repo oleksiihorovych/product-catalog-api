@@ -55,7 +55,7 @@ or password is checked in. For local development, configure credentials through 
 another external configuration provider. Do not paste secrets into PRs/logs.
 
 SQL Server Linux containers are officially supported on x64 hosts. ARM64 users should use Mock
-locally and a remote x64 SQL Server for database mode; x64 CI runs the real SQL integration tests.
+locally and a remote x64 SQL Server for database mode; database verification requires an available SQL Server instance.
 Emulated SQL Server is not a supported deployment or verification target.
 
 For a dedicated development database, set `Storage__Mode=SqlServer` and
@@ -117,51 +117,6 @@ Unexpected exceptions do not expose stack traces or exception messages in HTTP r
 Full exception diagnostics remain in server logs. Authentication for writes is introduced with
 the write slice; this read endpoint is public.
 
-## Docker and Compose
-
-Build and run Mock mode on ARM64 or x64:
-
-```sh
-docker compose up --build --detach
-```
-
-Open `http://localhost:5080/swagger` and the v1 listing.
-If another API already uses that port,
-set `CATALOG_PORT=5081` before starting Compose. The runtime image uses a non-root user, has a
-liveness health check and no SDK. Compose drops capabilities, uses a read-only API filesystem
-with a temporary `/tmp`, and binds the HTTP port to loopback only. Base images are pinned by digest.
-
-On an **x64 Linux Docker host**, set `SQL_ADMIN_PASSWORD` and `CATALOG_HTTP_PASSWORD` outside Git,
-then run:
-
-```sh
-docker compose -f compose.yaml -f compose.sql.yaml up --build --detach
-```
-
-Use strong SQL Server-compatible passwords. The local provisioning script requires the HTTP
-password to contain at least 16 characters from letters, digits and `_@!#%+.-`; quotes and
-semicolon are excluded to keep SQL substitution and the connection string unambiguous.
-This developer-only setup uses SQL Server Developer edition and trusted self-signed TLS.
-It does not constitute a highly available production SQL deployment.
-
-Compose starts SQL, runs the explicit migration/seed command once, provisions a dedicated
-`catalog_http` login with SELECT only, then starts the API with that login. The migration
-service alone receives the administrative database connection. SQL has a persistent volume
-and no published host port. Existing login passwords are not reset by provisioning: rotate
-credentials deliberately through the administrator, rather than changing an environment value
-and expecting the existing login to change. Seed does not overwrite existing products.
-
-Stop without deleting data:
-
-```sh
-docker compose -f compose.yaml -f compose.sql.yaml down
-```
-
-Use `docker compose down` for Mock mode. Do not add `--volumes` unless you intend to delete the
-local database. An empty-database check should use a fresh dedicated database and migration
-without seed, rather than deleting the catalog volume. The compose SQL override must not be
-started on ARM64 as if SQL Server supported that architecture.
-
 ## Tests
 
 The main solution contains fast domain and HTTP tests with xUnit/WebApplicationFactory.
@@ -186,30 +141,6 @@ SQL checks cover migrations/snapshot configuration, empty HTTP results, repeatab
 mock/SQL parity, one untracked query, decimal/Unicode round trips, committed reads, cancellation
 closing connections and reads not blocking behind uncommitted writers. EF InMemory is not used
 as a substitute for SQL Server.
-
-## GitHub Actions
-
-`Catalog CI` runs on PRs to `main` and pushes to `main`:
-
-- Workflow syntax validation with a checksummed actionlint binary, locked restore, Release build,
-  fast tests and migration/model consistency.
-- Real SQL Server tests on an isolated x64 runner with per-test disposable databases.
-- An x64 Docker build, full SQL Compose startup, explicit migration/seed, read-only API login,
-  and verification that the login has SELECT without INSERT/ALTER.
-  Container readiness here uses the liveness health check; catalog behavior is covered by the
-  HTTP and SQL integration tests rather than a separate deployed-API smoke script.
-
-PR runs have read-only repository permissions and do not publish or deploy. Credentials are
-random per run and masked; no repository secret is required for these disposable local services.
-On `main` only, after all three jobs pass, the tested Docker image is transferred as a short-lived
-Actions artifact and published to `ghcr.io/<owner>/<repository>:<commit-sha>` without rebuilding.
-Only the publish job receives `packages: write`. It uses `GITHUB_TOKEN`, logs out afterward and
-records the immutable registry digest in the job summary. Registry publication must be verified
-on an actual main run; a successful PR cannot prove it. No mutable `latest` tag is used.
-
-GHCR is an artifact registry. Hosted deployment, staging configuration, container scanning/SBOM,
-Kubernetes rollout and operational load validation are subsequent work. Hosting is unselected;
-there is no placeholder deployment-success job and no external resources are provisioned.
 
 ## S1 human verification
 
