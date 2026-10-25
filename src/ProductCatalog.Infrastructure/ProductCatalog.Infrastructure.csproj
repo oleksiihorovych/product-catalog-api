@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <!-- Override SqlClient's vulnerable transitive PKCS dependency; retain NuGet audit. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../ProductCatalog.Application/ProductCatalog.Application.csproj" />
     <ProjectReference Include="../ProductCatalog.Domain/ProductCatalog.Domain.csproj" />
   </ItemGroup>
