@@ -5,7 +5,10 @@ internal static class TestConstants
     public const int EmptyCatalogCount = 0;
     public const int CatalogProductCount = 23;
 
-    public const long ProductId = 1;
+    public static readonly Guid ProductId = CatalogProductId(1);
+
+    public static Guid CatalogProductId(int number) =>
+        Guid.Parse($"00000000-0000-0000-0000-{number:x12}");
     public const string ProductName = "Name";
     public const string UnicodeProductName = "Žluťoučký produkt";
     public const string ProductImageUri = "https://example.com/1.jpg";

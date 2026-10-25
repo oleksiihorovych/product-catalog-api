@@ -8,6 +8,14 @@ namespace ProductCatalog.Infrastructure.Persistence;
 public sealed class SqlProductRepository(CatalogDbContext db) : IProductRepository
 {
     /// <inheritdoc/>
+    public Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        db.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new ProductDetails(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    /// <inheritdoc/>
     public IAsyncEnumerable<ProductDetails> ReadAllAsync(CancellationToken cancellationToken) =>
         Stream(cancellationToken);
 

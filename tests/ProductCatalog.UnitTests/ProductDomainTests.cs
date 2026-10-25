@@ -20,10 +20,10 @@ public sealed class ProductDomainTests
     public void Product_CollectsErrorsAcrossFieldsWithStableCodes()
     {
         var exception = Assert.Throws<ValidationException>(() =>
-            new Product(0, " ", "file:///image.jpg", -1m, null));
+            new Product(Guid.Empty, " ", "file:///image.jpg", -1m, null));
 
         Assert.Collection(exception.Errors,
-            error => Assert.Equal(("Id", "Product.Id.Positive"), (error.PropertyName, error.ErrorCode)),
+            error => Assert.Equal(("Id", "Product.Id.Required"), (error.PropertyName, error.ErrorCode)),
             error => Assert.Equal(("Name", "Product.Name.Required"), (error.PropertyName, error.ErrorCode)),
             error => Assert.Equal(("ImgUri", "Product.ImgUri.Invalid"), (error.PropertyName, error.ErrorCode)),
             error => Assert.Equal(("Price", "Product.Price.OutOfRange"), (error.PropertyName, error.ErrorCode)));
@@ -49,11 +49,9 @@ public sealed class ProductDomainTests
         Assert.Throws<ValidationException>(() => new Product(TestConstants.ProductId, TestConstants.ProductName, value!, 0, null));
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void Product_RejectsNonpositiveId(long id) =>
-        Assert.Throws<ValidationException>(() => new Product(id, TestConstants.ProductName, TestConstants.ProductImageUri, 1, null));
+    [Fact]
+    public void Product_RejectsEmptyId() =>
+        Assert.Throws<ValidationException>(() => new Product(Guid.Empty, TestConstants.ProductName, TestConstants.ProductImageUri, 1, null));
 
     [Theory]
     [InlineData("-1")]

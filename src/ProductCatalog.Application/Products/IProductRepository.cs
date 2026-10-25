@@ -11,4 +11,10 @@ public interface IProductRepository
     /// Storage failures may occur during enumeration, after some products have been read.
     /// </remarks>
     IAsyncEnumerable<ProductDetails> ReadAllAsync(CancellationToken cancellationToken);
+
+    /// <summary>Reads one product by its nonempty GUID identifier.</summary>
+    /// <param name="id">The nonempty product GUID, validated by the caller.</param>
+    /// <param name="cancellationToken">Cancels the underlying storage operation.</param>
+    /// <returns>The product details, or null when no product has that identifier.</returns>
+    Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken);
 }

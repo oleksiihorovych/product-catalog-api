@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:5080
 
-### Full catalog: 200 OK, one JSON array, all 23 demo products (IDs 1 through 23)
+### Full catalog: 200 OK, one JSON array, all 23 demo products (GUID suffixes 000000000001 through 000000000017)
 GET {{baseUrl}}/api/v1/products
 Accept: application/json
 
@@ -19,4 +19,32 @@ GET {{baseUrl}}/swagger
 
 ### Unknown route: 404, application/problem+json, traceId
 GET {{baseUrl}}/does-not-exist
+Accept: application/problem+json
+
+### Product lookup: 200, same fields as the corresponding catalog entry
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Missing product: 404, problem details
+GET {{baseUrl}}/api/v1/products/ffffffff-ffff-ffff-ffff-ffffffffffff
+Accept: application/problem+json
+
+### Invalid product ID: 400, validation problem
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000000
+Accept: application/problem+json
+
+### Malformed product ID: 400 from HTTP model binding
+GET {{baseUrl}}/api/v1/products/abc
+Accept: application/problem+json
+
+### Null description: 200, description is null
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000003
+Accept: application/json
+
+### Last demo product: 200, price 235.75
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000017
+Accept: application/json
+
+### Numeric IDs are invalid after the GUID upgrade: 400
+GET {{baseUrl}}/api/v1/products/1
 Accept: application/problem+json
