@@ -1,0 +1,16 @@
+@baseUrl = http://localhost:5080
+
+### Liveness: 200 OK, text body Healthy
+GET {{baseUrl}}/health/live
+
+### Generated OpenAPI (Development only): 200 OK, JSON
+GET {{baseUrl}}/openapi/v1.json
+
+### Swagger UI (Development only): redirect or 200 OK, HTML
+GET {{baseUrl}}/swagger
+
+### Unknown route: 404, application/problem+json, traceId
+GET {{baseUrl}}/does-not-exist
+
+### Test-only controller is absent from the running application: 404
+GET {{baseUrl}}/__test/failure
