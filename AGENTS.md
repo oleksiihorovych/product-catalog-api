@@ -108,10 +108,10 @@ CI/CD and a real deployment are user-requested additions to the project scope. I
 - Verify that the commit succeeded and inspect the remaining status. Report commit hashes and any remaining relevant changes in the handoff. If Git identity, hooks or permissions block a commit, preserve the work and report the blocker; never invent an identity, disable hooks or claim a commit exists when it does not.
 - Do not defer all commits until the end of a task, create empty commits, fabricate intermediate history after the fact, or squash/amend completed units without an explicit request. Feature-branch push and PR creation are authorized by the workflow below; merge, release, deployment and visibility changes require their own user authorization.
 
-## AI assistance and engineering responsibility
+## Engineering responsibility
 
 - Evaluate changes by correctness, clarity, maintainability and verified behavior; there is no target percentage of AI-generated code. Do not fabricate manual authorship, timestamps, attribution, human review or approval.
-- Include a brief factual AI-assistance note in PR descriptions: what AI helped implement or review, which checks actually ran, and what still awaits human verification. Do not repeat boilerplate AI labels in every commit or add invented authorship trailers. Use the existing Git identity.
+- Do not add a dedicated AI-assistance section to PR descriptions by default. Keep actual validation and pending human verification explicit. Do not add invented authorship trailers; use the existing Git identity.
 - Automated checks do not replace human acceptance. Mark a slice as awaiting verification until the user confirms it; the human reviewer should be able to understand, explain and maintain the submitted result.
 
 ## Feature branches, pull requests and human verification
@@ -121,5 +121,6 @@ CI/CD and a real deployment are user-requested additions to the project scope. I
 - When adopting this workflow for existing unpushed work, keep every commit and uncommitted change on its feature branch; establish the clean pre-feature base as `main` without rewriting published history or force-pushing.
 - After the slice's relevant checks pass, push its feature branch to GitHub and open a PR targeting `main`. The user explicitly authorizes these pushes and PRs for the requested slices. Keep the review history's atomic commits; do not squash or amend them without a request. Attach every created PR to the current Codex chat.
 - The PR must explain the user-visible result, relevant scope, actual validation and limitations, and a reproducible human verification checklist: launch/configuration, sample requests, expected responses, prerequisites and any cleanup.
+- Apply the `writing-pull-requests` skill when available. Prefer Summary, Design decisions, Validation, Human verification and Limitations, scaling detail to the change and omitting irrelevant sections. Include focused reviewer notes for consequential behavior or uncertainty; avoid file inventories, agent work diaries and unsupported quality claims. These rules apply independently of the personal skill installation.
 - Give the user the PR link and verification instructions, then STOP at the end of each slice, including bootstrap T0. Mark it as implemented/awaiting human verification, not accepted. Do not begin the next slice, merge, or delete the feature branch until the user explicitly approves the result or requests the next action.
 - Review fixes stay on the same feature branch/PR and are checked and committed atomically. After explicit approval and merge into `main`, update local `main` before creating the next feature branch; if approval does not authorize merging, leave the PR open and request the needed merge action before dependent work.
