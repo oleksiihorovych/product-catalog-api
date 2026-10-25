@@ -3,18 +3,22 @@ using ProductCatalog.Application.Products;
 
 namespace ProductCatalog.Infrastructure.Products;
 
-internal sealed class MockProductReader : IProductReader
+internal sealed class MockProductRepository : IProductRepository
 {
     private readonly IReadOnlyList<ProductDetails> products = DemoProducts.Create()
-        .Select(p => new ProductDetails(p.Id, p.Name, p.ImgUri, p.Price, p.Description)).ToArray();
+        .Select(p => new ProductDetails(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
+        .ToArray();
 
-    public async IAsyncEnumerable<ProductDetails> StreamAllAsync(
+    /// <inheritdoc/>
+    public async IAsyncEnumerable<ProductDetails> ReadAllAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await Task.CompletedTask;
+
         foreach (var product in products)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
             yield return product;
         }
     }

@@ -9,6 +9,9 @@
     <PackageReference Include="NSwag.AspNetCore" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="ProductCatalog.UnitTests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../ProductCatalog.Application/ProductCatalog.Application.csproj" />
     <ProjectReference Include="../ProductCatalog.Infrastructure/ProductCatalog.Infrastructure.csproj" />
   </ItemGroup>

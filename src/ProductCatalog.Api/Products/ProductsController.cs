@@ -6,11 +6,16 @@ namespace ProductCatalog.Api.Products;
 
 [ApiController]
 [Route("api/v1/products")]
-public sealed class ProductsController(IProductCatalogService catalog) : ControllerBase
+public sealed class ProductsController(IProductCatalogApplicationService catalog) : ControllerBase
 {
     /// <summary>Get every product in the catalog.</summary>
-    /// <remarks>Returns a single JSON array ordered by ID, with no pagination or hidden limit.
-    /// An empty catalog returns []. The response streams; a failure after it starts aborts the transfer.</remarks>
+    /// <param name="cancellationToken">Cancels the catalog read when the HTTP request is aborted.</param>
+    /// <returns>The complete catalog as a streamed JSON array; an empty catalog produces [].</returns>
+    /// <remarks>
+    /// Ordered by ID with no pagination or hidden limit. Clients must consume the entire response;
+    /// a failure after transmission starts cannot be replaced by a Problem Details document.
+    /// Saturated admission returns 429, with a plain-text fallback if Problem Details cannot be written.
+    /// </remarks>
     [HttpGet]
     [EndpointName("ListAllProductsV1")]
     [EndpointSummary("Get all products")]
@@ -19,6 +24,7 @@ public sealed class ProductsController(IProductCatalogService catalog) : Control
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError, "application/problem+json")]
     [EnableRateLimiting("catalog-listing")]
-    public IActionResult GetAll(CancellationToken cancellationToken) =>
-        new ProductsJsonResult(catalog.ListAllAsync(cancellationToken));
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public IAsyncEnumerable<ProductResponse> GetAll(CancellationToken cancellationToken) =>
+        catalog.ListAllAsync(cancellationToken).ToResponses(cancellationToken);
 }

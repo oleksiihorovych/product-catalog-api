@@ -6,4 +6,9 @@ namespace ProductCatalog.Api.Products;
 /// <param name="ImgUri">Absolute HTTP or HTTPS image URI, at most 2048 characters.</param>
 /// <param name="Price">Nonnegative decimal(18,2) price.</param>
 /// <param name="Description">Optional description, at most 4000 characters.</param>
-public sealed record ProductResponse(long Id, string Name, string ImgUri, decimal Price, string? Description);
+public sealed record ProductResponse(
+    long Id,
+    string Name,
+    string ImgUri,
+    decimal Price,
+    string? Description);
