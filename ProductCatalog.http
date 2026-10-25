@@ -1,5 +1,13 @@
 @baseUrl = http://localhost:5080
 
+### Full catalog: 200 OK, one JSON array, all 23 demo products (IDs 1 through 23)
+GET {{baseUrl}}/api/v1/products
+Accept: application/json
+
+### v1 does not apply pagination: still all 23 demo products
+GET {{baseUrl}}/api/v1/products?page=1&pageSize=10
+Accept: application/json
+
 ### Liveness: 200 OK, text body Healthy
 GET {{baseUrl}}/health/live
 

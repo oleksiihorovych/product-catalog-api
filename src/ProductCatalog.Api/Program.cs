@@ -1,12 +1,17 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using ProductCatalog.Api.Middleware;
+using ProductCatalog.Api.Products;
+using ProductCatalog.Infrastructure;
+using ProductCatalog.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
+builder.Services.AddCatalogStorage(builder.Configuration);
+builder.Services.AddProductListing(builder.Configuration);
 builder.Services.AddProblemDetails(options =>
 {
     options.CustomizeProblemDetails = context =>
@@ -17,8 +22,20 @@ builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 var app = builder.Build();
 
+if (args.Contains("--migrate", StringComparer.Ordinal))
+{
+    if (builder.Configuration["Storage:Mode"] != "SqlServer")
+        throw new InvalidOperationException("The migration command requires Storage:Mode=SqlServer.");
+    await using var scope = app.Services.CreateAsyncScope();
+    await CatalogDatabaseSetup.InitializeAsync(scope.ServiceProvider.GetRequiredService<CatalogDbContext>(),
+        args.Contains("--seed", StringComparer.Ordinal), CancellationToken.None);
+    return;
+}
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseRouting();
+app.UseRateLimiter();
 
 if (app.Environment.IsDevelopment())
 {

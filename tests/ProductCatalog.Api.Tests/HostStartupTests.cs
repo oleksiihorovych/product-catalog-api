@@ -41,7 +41,10 @@ public sealed class HostStartupTests
         var document = await schema.Content.ReadFromJsonAsync<JsonElement>();
         Assert.StartsWith("3.", document.GetProperty("openapi").GetString());
         Assert.True(document.TryGetProperty("info", out _));
-        Assert.False(document.GetProperty("paths").TryGetProperty("/api/v1/products", out _));
+        var operation = document.GetProperty("paths").GetProperty("/api/v1/products").GetProperty("get");
+        Assert.Equal("ListAllProductsV1", operation.GetProperty("operationId").GetString());
+        Assert.Equal("array", operation.GetProperty("responses").GetProperty("200")
+            .GetProperty("content").GetProperty("application/json").GetProperty("schema").GetProperty("type").GetString());
     }
 
     [Theory]
