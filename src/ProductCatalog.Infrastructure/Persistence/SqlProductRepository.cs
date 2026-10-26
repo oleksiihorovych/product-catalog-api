@@ -8,6 +8,25 @@ namespace ProductCatalog.Infrastructure.Persistence;
 public sealed class SqlProductRepository(CatalogDbContext db) : IProductRepository
 {
     /// <inheritdoc/>
+    public async Task<ProductPage> ReadPageAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var offset = ProductPagination.GetOffset(page, pageSize);
+        var items = await db.Products.AsNoTracking()
+            .OrderBy(product => product.Id)
+            .Skip(offset)
+            .Take(pageSize + 1)
+            .Select(product => new ProductDetails(product.Id, product.Name, product.ImgUri, product.Price, product.Description))
+            .ToListAsync(cancellationToken);
+        var hasNext = items.Count > pageSize;
+        if (hasNext)
+        {
+            items.RemoveAt(pageSize);
+        }
+
+        return new ProductPage(items, page, pageSize, hasNext);
+    }
+
+    /// <inheritdoc/>
     public Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken) =>
         db.Products
             .AsNoTracking()

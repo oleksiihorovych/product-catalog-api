@@ -13,6 +13,21 @@ internal sealed class MockProductRepository : IProductRepository
         .ToArray();
 
     /// <inheritdoc/>
+    public Task<ProductPage> ReadPageAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var offset = ProductPagination.GetOffset(page, pageSize);
+        cancellationToken.ThrowIfCancellationRequested();
+        ProductDetails[] snapshot;
+        lock (sync)
+        {
+            snapshot = products;
+        }
+
+        var window = snapshot.Skip(offset).Take(pageSize + 1).ToArray();
+        return Task.FromResult(new ProductPage(window.Take(pageSize).ToArray(), page, pageSize, window.Length > pageSize));
+    }
+
+    /// <inheritdoc/>
     public Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();

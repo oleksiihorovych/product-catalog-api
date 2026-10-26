@@ -136,6 +136,9 @@ public sealed class DescriptionContractTests
 
     private sealed class FakeUpdateService : IProductApplicationService
     {
+        public Task<ProductPage> ListPageAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected paginated read.");
+
         public IAsyncEnumerable<ProductDetails> ListAllAsync(CancellationToken cancellationToken) =>
             throw new InvalidOperationException("Unexpected listing during an update scenario.");
 

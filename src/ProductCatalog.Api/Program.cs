@@ -37,6 +37,7 @@ if (app.Environment.IsDevelopment())
     {
         options.Path = "/swagger";
         options.SwaggerRoutes.Add(new("v1", "/openapi/v1.json"));
+        options.SwaggerRoutes.Add(new("v2", "/openapi/v2.json"));
     });
 }
 

@@ -130,3 +130,24 @@ PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
 Content-Type: application/json
 
 {"description":"Description for demo product 01."}
+
+### v2 defaults: 10 products, page 1, pageSize 10, hasNext true
+GET {{baseUrl}}/api/v2/products
+
+### v2 second page: 10 products, hasNext true
+GET {{baseUrl}}/api/v2/products?page=2&pageSize=10
+
+### v2 third page: 3 products, hasNext false
+GET {{baseUrl}}/api/v2/products?page=3&pageSize=10
+
+### v2 beyond the end: empty items, hasNext false
+GET {{baseUrl}}/api/v2/products?page=4&pageSize=10
+
+### Invalid pagination: 400 ValidationProblemDetails with traceId
+GET {{baseUrl}}/api/v2/products?page=0&pageSize=101
+
+### Unsupported offset: 400 ValidationProblemDetails
+GET {{baseUrl}}/api/v2/products?page=2147483647&pageSize=100
+
+### Separate v2 OpenAPI document (Development only)
+GET {{baseUrl}}/openapi/v2.json

@@ -6,6 +6,7 @@ using ProductCatalog.Application.Products;
 namespace ProductCatalog.Api.Products;
 
 [ApiController]
+[ApiExplorerSettings(GroupName = "v1")]
 [Route("api/v1/products")]
 public sealed class ChangeProductDescriptionController(IProductApplicationService service) : ControllerBase
 {

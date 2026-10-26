@@ -81,6 +81,9 @@ public sealed class ProductsControllerTests
 
     private sealed class StubCatalogService(int count) : IProductApplicationService
     {
+        public Task<ProductPage> ListPageAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected paginated read.");
+
         public Task<bool> ChangeDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("Unexpected update during a read scenario.");
 

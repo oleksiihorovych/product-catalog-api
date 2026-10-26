@@ -7,6 +7,14 @@ namespace ProductCatalog.Application.Products;
 public sealed class ProductApplicationService(IProductRepository repository) : IProductApplicationService
 {
     /// <inheritdoc/>
+    public Task<ProductPage> ListPageAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        ProductPagination.GetOffset(page, pageSize);
+        cancellationToken.ThrowIfCancellationRequested();
+        return repository.ReadPageAsync(page, pageSize, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public IAsyncEnumerable<ProductDetails> ListAllAsync(CancellationToken cancellationToken) =>
         repository.ReadAllAsync(cancellationToken);
 

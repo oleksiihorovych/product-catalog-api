@@ -104,6 +104,9 @@ public sealed class ProductApplicationServiceTests
 
     private sealed class StubRepository(IEnumerable<ProductDetails> products) : IProductRepository
     {
+        public Task<ProductPage> ReadPageAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected paginated read.");
+
         public Task<bool> UpdateDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("Unexpected write during a read scenario.");
 
@@ -148,6 +151,9 @@ public sealed class ProductApplicationServiceTests
 
     private sealed class FailingRepository(Exception exception) : IProductRepository
     {
+        public Task<ProductPage> ReadPageAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected paginated read.");
+
         public Task<bool> UpdateDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
             throw new InvalidOperationException("Unexpected write during a read scenario.");
 

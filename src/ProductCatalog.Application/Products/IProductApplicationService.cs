@@ -3,6 +3,14 @@ namespace ProductCatalog.Application.Products;
 /// <summary>Exposes product use cases independently of HTTP and storage implementations.</summary>
 public interface IProductApplicationService
 {
+    /// <summary>Reads a numbered page in ascending SQL Server ID order.</summary>
+    /// <param name="page">One-based page number with a supported offset.</param>
+    /// <param name="pageSize">Number of items, from 1 to 100.</param>
+    /// <param name="cancellationToken">Cancels the underlying read.</param>
+    /// <returns>A bounded page; an empty page has HasNext false.</returns>
+    /// <remarks>Reads at most pageSize + 1 rows. Separate requests do not share a snapshot.</remarks>
+    Task<ProductPage> ListPageAsync(int page, int pageSize, CancellationToken cancellationToken);
+
     /// <summary>Lists the complete catalog in ascending ID order.</summary>
     /// <param name="cancellationToken">Cancels enumeration and the underlying read.</param>
     /// <returns>A lazy sequence containing all products, or an empty sequence when none exist.</returns>

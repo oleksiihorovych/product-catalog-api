@@ -116,6 +116,9 @@ public sealed class ProductApplicationServiceDescriptionTests
 
     private sealed class FakeRepository : IProductRepository
     {
+        public Task<ProductPage> ReadPageAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected paginated read.");
+
         public Func<CancellationToken, Task<bool>> Save { get; init; } = _ => Task.FromResult(true);
         public int Calls { get; private set; }
         public Guid Id { get; private set; }

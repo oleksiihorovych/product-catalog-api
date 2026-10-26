@@ -9,7 +9,8 @@ internal static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
-        services.AddOpenApi();
+        services.AddOpenApi("v1");
+        services.AddOpenApi("v2");
         services.AddHealthChecks();
 
         services.AddApiProblemDetails();
