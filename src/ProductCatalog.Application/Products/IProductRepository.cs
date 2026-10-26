@@ -17,4 +17,12 @@ public interface IProductRepository
     /// <param name="cancellationToken">Cancels the underlying storage operation.</param>
     /// <returns>The product details, or null when no product has that identifier.</returns>
     Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Atomically updates only Description for the matching product without a preliminary read.</summary>
+    /// <param name="id">The nonempty product GUID, validated by the caller.</param>
+    /// <param name="description">The exact domain-validated description; null clears the value.</param>
+    /// <param name="cancellationToken">Cancels the underlying write.</param>
+    /// <returns>True when a product matched, including an unchanged value; false when no product matched.</returns>
+    /// <remarks>Completes after saving. The last successful write wins; no other fields are written.</remarks>
+    Task<bool> UpdateDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken);
 }

@@ -37,9 +37,13 @@ internal sealed class ProductValidator : AbstractValidator<Product>
             .WithMessage("Price must have at most two decimal places.")
             .WithErrorCode("Product.Price.Precision");
 
-        RuleFor(p => p.Description)
-            .MaximumLength(DomainConstants.ProductMaxDescriptionLength)
-            .WithErrorCode("Product.Description.TooLong");
+        RuleFor(p => p.Description).Custom((description, context) =>
+        {
+            foreach (var error in ProductDescriptionRules.Validate(description).Errors)
+            {
+                context.AddFailure(error);
+            }
+        });
     }
 
     private static bool BeHttpUri(string value) =>

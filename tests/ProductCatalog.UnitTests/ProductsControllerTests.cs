@@ -79,8 +79,11 @@ public sealed class ProductsControllerTests
         Assert.Equal(expected, validation.IsValid(Guid.Parse(value)));
     }
 
-    private sealed class StubCatalogService(int count) : IProductCatalogApplicationService
+    private sealed class StubCatalogService(int count) : IProductApplicationService
     {
+        public Task<bool> ChangeDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected update during a read scenario.");
+
         public ProductDetails? Product { get; init; }
 
         public Guid? ReceivedId { get; private set; }

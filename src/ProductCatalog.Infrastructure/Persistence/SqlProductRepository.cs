@@ -3,7 +3,7 @@ using ProductCatalog.Application.Products;
 
 namespace ProductCatalog.Infrastructure.Persistence;
 
-/// <summary>Reads products directly from SQL Server through an ordered, untracked projection.</summary>
+/// <summary>Reads products through untracked projections and performs targeted SQL updates.</summary>
 /// <remarks>The DbContext must remain alive until enumeration completes or is disposed.</remarks>
 public sealed class SqlProductRepository(CatalogDbContext db) : IProductRepository
 {
@@ -18,6 +18,14 @@ public sealed class SqlProductRepository(CatalogDbContext db) : IProductReposito
     /// <inheritdoc/>
     public IAsyncEnumerable<ProductDetails> ReadAllAsync(CancellationToken cancellationToken) =>
         Stream(cancellationToken);
+
+    /// <inheritdoc/>
+    public async Task<bool> UpdateDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken)
+    {
+        var affected = await db.Products.Where(product => product.Id == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(product => product.Description, description), cancellationToken);
+        return affected != 0;
+    }
 
     private async IAsyncEnumerable<ProductDetails> Stream(
         [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken)
