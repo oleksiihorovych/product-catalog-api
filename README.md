@@ -26,7 +26,12 @@ Open `http://localhost:5080/swagger`; request examples are in `ProductCatalog.ht
 | `/openapi/v1.json` | Generated OpenAPI document in Development |
 
 Swagger/OpenAPI are disabled outside Development. NSwag provides the bundled UI;
-ASP.NET Core generates the OpenAPI document. Configure `AllowedHosts` for other hostnames
+ASP.NET Core generates the OpenAPI document from controller signatures and DTOs.
+Controllers declare response codes and types with `ProducesResponseType`; XML comments
+provide operation, parameter and response descriptions. Keep this convention for every
+controller. Narrow transformers describe concurrency headers and JSON shapes hidden by
+custom converters; they do not replace entire operation definitions.
+Configure `AllowedHosts` for other hostnames
 and HTTPS when exposing the API outside the local development environment.
 
 ## Application structure

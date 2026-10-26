@@ -15,11 +15,13 @@ public sealed class GetAllProductsController(IProductCatalogApplicationService c
     /// Ordered by ID with no pagination or hidden limit. Clients must consume the entire response;
     /// a failure after transmission starts cannot be replaced by a Problem Details document.
     /// Saturated admission returns 429, with a plain-text fallback if Problem Details cannot be written.
+    /// No brokers are required.
     /// </remarks>
+    /// <response code="200">The complete catalog, or an empty array.</response>
+    /// <response code="429">The concurrent listing limit has been reached.</response>
+    /// <response code="500">An unexpected failure occurred before the response started.</response>
     [HttpGet]
     [EndpointName("ListAllProductsV1")]
-    [EndpointSummary("Get all products")]
-    [EndpointDescription("Returns every product ordered by ID as one JSON array. Empty catalogs return []. No brokers are required.")]
     [ProducesResponseType<ProductResponse[]>(StatusCodes.Status200OK, "application/json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status429TooManyRequests, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError, "application/problem+json")]
