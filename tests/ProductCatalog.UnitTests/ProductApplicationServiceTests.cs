@@ -104,6 +104,9 @@ public sealed class ProductApplicationServiceTests
 
     private sealed class StubRepository(IEnumerable<ProductDetails> products) : IProductRepository
     {
+        public Task<bool> UpdateDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected write during a read scenario.");
+
         public Guid? ReceivedId { get; private set; }
 
         public Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -145,6 +148,9 @@ public sealed class ProductApplicationServiceTests
 
     private sealed class FailingRepository(Exception exception) : IProductRepository
     {
+        public Task<bool> UpdateDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected write during a read scenario.");
+
         public Task<ProductDetails?> ReadByIdAsync(Guid id, CancellationToken cancellationToken) =>
             Task.FromException<ProductDetails?>(exception);
 

@@ -1,3 +1,6 @@
+using FluentValidation;
+using ProductCatalog.Domain.Products;
+
 namespace ProductCatalog.Application.Products;
 
 /// <summary>Coordinates product use cases through the selected repository.</summary>
@@ -16,5 +19,23 @@ public sealed class ProductApplicationService(IProductRepository repository) : I
         }
 
         return repository.ReadByIdAsync(id, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public Task<bool> ChangeDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (id == Guid.Empty)
+        {
+            throw new ArgumentException("The product ID must not be empty.", nameof(id));
+        }
+
+        var validation = ProductDescriptionRules.Validate(description);
+        if (!validation.IsValid)
+        {
+            throw new ValidationException(validation.Errors);
+        }
+
+        return repository.UpdateDescriptionAsync(id, description, cancellationToken);
     }
 }

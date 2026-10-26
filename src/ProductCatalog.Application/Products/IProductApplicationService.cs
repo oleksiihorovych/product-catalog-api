@@ -18,4 +18,14 @@ public interface IProductApplicationService
     /// <returns>The product details, or null when no product has that identifier.</returns>
     /// <exception cref="ArgumentException">The identifier is empty.</exception>
     Task<ProductDetails?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>Validates the change and performs one targeted save without loading the product.</summary>
+    /// <param name="id">The nonempty product identifier.</param>
+    /// <param name="description">The exact new value; null clears it and whitespace is preserved.</param>
+    /// <param name="cancellationToken">Cancels the operation and underlying storage call.</param>
+    /// <returns>True after a successful save; false when the product does not exist.</returns>
+    /// <remarks>The last successful write determines the description; other product fields remain unchanged.</remarks>
+    /// <exception cref="ArgumentException">The identifier is empty.</exception>
+    /// <exception cref="FluentValidation.ValidationException">The description exceeds the domain length limit.</exception>
+    Task<bool> ChangeDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken);
 }

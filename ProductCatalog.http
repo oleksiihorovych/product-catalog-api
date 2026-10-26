@@ -48,3 +48,85 @@ Accept: application/json
 ### Numeric IDs are invalid after the GUID upgrade: 400
 GET {{baseUrl}}/api/v1/products/1
 Accept: application/problem+json
+
+### Update description: 204 No Content, only description changes
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":"Updated description"}
+
+### Read after update: 200, updated description and unchanged remaining fields
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Accept: application/json
+
+### Clear description: 204 No Content; a following GET has description: null
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":null}
+
+### Missing product: 404 ProblemDetails
+PATCH {{baseUrl}}/api/v1/products/ffffffff-ffff-ffff-ffff-ffffffffffff
+Content-Type: application/json
+
+{"description":"Updated description"}
+
+### Missing description: 400 ValidationProblemDetails
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{}
+
+### Duplicate description: 400 ValidationProblemDetails, no change
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":"First","description":"Second"}
+
+### Unknown field: 400 ValidationProblemDetails, no change
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":"Updated description","price":0}
+
+### Unsupported media type: 415 ProblemDetails
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: text/plain
+
+Updated description
+
+### Empty description is preserved: 204 No Content
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":""}
+
+### Whitespace is preserved: 204 No Content
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":"   "}
+
+### Wrong value type: 400 ValidationProblemDetails
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":123}
+
+### Null body: 400 ValidationProblemDetails
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+null
+
+### Empty GUID: 400 ValidationProblemDetails
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{"description":"Manual review"}
+
+### Restore product 1 to its initial demo description: 204 No Content
+PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Content-Type: application/json
+
+{"description":"Description for demo product 01."}

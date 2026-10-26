@@ -81,6 +81,9 @@ public sealed class ProductsControllerTests
 
     private sealed class StubCatalogService(int count) : IProductApplicationService
     {
+        public Task<bool> ChangeDescriptionAsync(Guid id, string? description, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected update during a read scenario.");
+
         public ProductDetails? Product { get; init; }
 
         public Guid? ReceivedId { get; private set; }
