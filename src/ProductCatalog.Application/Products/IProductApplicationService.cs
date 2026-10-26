@@ -1,7 +1,7 @@
 namespace ProductCatalog.Application.Products;
 
-/// <summary>Exposes catalog use cases independently of HTTP and storage implementations.</summary>
-public interface IProductCatalogApplicationService
+/// <summary>Exposes product use cases independently of HTTP and storage implementations.</summary>
+public interface IProductApplicationService
 {
     /// <summary>Lists the complete catalog in ascending ID order.</summary>
     /// <param name="cancellationToken">Cancels enumeration and the underlying read.</param>

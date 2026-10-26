@@ -79,7 +79,7 @@ public sealed class ProductsControllerTests
         Assert.Equal(expected, validation.IsValid(Guid.Parse(value)));
     }
 
-    private sealed class StubCatalogService(int count) : IProductCatalogApplicationService
+    private sealed class StubCatalogService(int count) : IProductApplicationService
     {
         public ProductDetails? Product { get; init; }
 

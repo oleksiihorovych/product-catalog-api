@@ -6,7 +6,7 @@ namespace ProductCatalog.Api.Products;
 
 [ApiController]
 [Route("api/v1/products")]
-public sealed class GetAllProductsController(IProductCatalogApplicationService catalog) : ControllerBase
+public sealed class GetAllProductsController(IProductApplicationService catalog) : ControllerBase
 {
     /// <summary>Get every product in the catalog.</summary>
     /// <param name="cancellationToken">Cancels the catalog read when the HTTP request is aborted.</param>

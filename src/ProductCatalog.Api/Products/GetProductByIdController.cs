@@ -6,7 +6,7 @@ namespace ProductCatalog.Api.Products;
 
 [ApiController]
 [Route("api/v1/products")]
-public sealed class GetProductByIdController(IProductCatalogApplicationService catalog) : ControllerBase
+public sealed class GetProductByIdController(IProductApplicationService catalog) : ControllerBase
 {
     /// <summary>Get one product by ID.</summary>
     /// <param name="id">A nonempty GUID product identifier.</param>

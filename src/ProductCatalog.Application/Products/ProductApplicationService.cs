@@ -1,7 +1,7 @@
 namespace ProductCatalog.Application.Products;
 
-/// <summary>Coordinates catalog reads through the selected repository.</summary>
-public sealed class ProductCatalogApplicationService(IProductRepository repository) : IProductCatalogApplicationService
+/// <summary>Coordinates product use cases through the selected repository.</summary>
+public sealed class ProductApplicationService(IProductRepository repository) : IProductApplicationService
 {
     /// <inheritdoc/>
     public IAsyncEnumerable<ProductDetails> ListAllAsync(CancellationToken cancellationToken) =>
