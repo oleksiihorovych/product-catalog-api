@@ -11,7 +11,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        switch (configuration["Storage:Mode"] ?? "Mock")
+        switch (configuration["Storage:Mode"] ?? "SqlServer")
         {
             case "Mock":
                 services.AddSingleton<IProductRepository, MockProductRepository>();

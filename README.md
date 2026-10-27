@@ -15,7 +15,19 @@ dotnet test --no-build --configuration Release
 dotnet run --project src/ProductCatalog.Api --launch-profile http
 ```
 
-The default Mock mode has 23 deterministic products and requires no external services.
+SQL Server is the default storage. Set `ConnectionStrings__Catalog` before the normal
+launch; a missing connection fails startup rather than silently using demo data.
+To run without SQL Server, use the standalone `--mock-data` application switch:
+
+```sh
+dotnet run --project src/ProductCatalog.Api -- --mock-data
+```
+
+From the `src/ProductCatalog.Api` directory, use `dotnet run` for SQL or
+`dotnet run -- --mock-data` for Mock. Mock has 23 deterministic products and needs
+no external services. The switch overrides `Storage:Mode`; without it, an explicit
+`Storage__Mode` setting is still honored, otherwise SqlServer is used.
+Restart the application when changing storage; data is not copied between modes.
 Open `http://localhost:5080/swagger`; request examples are in `ProductCatalog.http`.
 
 | Route | Result |
@@ -189,7 +201,9 @@ authorization is outside the current delivery scope.
 
 ## SQL Server setup
 
-Set `Storage__Mode=Mock` or `Storage__Mode=SqlServer`. SQL mode requires
+Normal startup defaults to SQL Server; `--mock-data` selects in-memory data.
+Existing `Storage__Mode=Mock` or `Storage__Mode=SqlServer` configuration remains supported,
+with `--mock-data` taking priority. SQL mode requires
 `ConnectionStrings__Catalog`, supplied through environment variables or another external
 configuration provider. Never commit credentials. Connect to an existing SQL Server instance.
 

@@ -5,7 +5,12 @@ using ProductCatalog.Infrastructure.DbContexts;
 using ProductCatalog.Infrastructure.Seeding;
 using ProductCatalog.Infrastructure;
 
-var builder = WebApplication.CreateBuilder(args);
+// Consume the standalone switch before the host parses key/value command-line arguments.
+var useMockData = args.Contains("--mock-data", StringComparer.Ordinal);
+var builder = WebApplication.CreateBuilder(args.Where(argument => argument != "--mock-data").ToArray());
+builder.Configuration["Storage:Mode"] = useMockData
+    ? "Mock"
+    : builder.Configuration["Storage:Mode"] ?? "SqlServer";
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);

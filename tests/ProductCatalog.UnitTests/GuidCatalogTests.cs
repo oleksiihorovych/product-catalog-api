@@ -31,7 +31,8 @@ public sealed class GuidCatalogTests
     public async Task MockListing_ReturnsEverySeedProductInSqlGuidOrder()
     {
         var services = new ServiceCollection();
-        services.AddInfrastructure(new ConfigurationBuilder().Build());
+        services.AddInfrastructure(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Storage:Mode"] = "Mock" }).Build());
         using var provider = services.BuildServiceProvider();
         var repository = provider.GetRequiredService<IProductRepository>();
         var actual = new List<ProductDetails>();
