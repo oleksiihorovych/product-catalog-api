@@ -11,18 +11,16 @@ namespace ProductCatalog.Api.Controllers.GetProducts.V1;
 [Route("api/v1/products")]
 public sealed class GetProductsController(IProductApplicationService catalog) : ControllerBase
 {
-    /// <summary>Get every product in the catalog.</summary>
-    /// <param name="cancellationToken">Cancels the catalog read when the HTTP request is aborted.</param>
-    /// <returns>The complete catalog as a streamed JSON array; an empty catalog produces [].</returns>
+    /// <summary>Get all products.</summary>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>All products in ascending ID order, or an empty array when the catalog is empty.</returns>
     /// <remarks>
-    /// Ordered by ID with no pagination or hidden limit. Clients must consume the entire response;
-    /// a failure after transmission starts cannot be replaced by a Problem Details document.
-    /// Saturated admission returns 429, with a plain-text fallback if Problem Details cannot be written.
-    /// No brokers are required.
+    /// Returns the complete catalog without pagination. Read the entire response;
+    /// an interrupted transfer may contain an incomplete JSON array.
     /// </remarks>
-    /// <response code="200">The complete catalog, or an empty array.</response>
-    /// <response code="429">The concurrent listing limit has been reached.</response>
-    /// <response code="500">An unexpected failure occurred before the response started.</response>
+    /// <response code="200">The complete product list, or an empty array.</response>
+    /// <response code="429">Too many concurrent requests for the complete catalog.</response>
+    /// <response code="500">An unexpected error occurred before the response started.</response>
     [HttpGet]
     [EndpointName("ListAllProductsV1")]
     [ProducesResponseType<ProductResponse[]>(StatusCodes.Status200OK, "application/json")]

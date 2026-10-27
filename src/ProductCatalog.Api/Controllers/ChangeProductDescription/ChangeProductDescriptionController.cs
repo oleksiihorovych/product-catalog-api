@@ -7,26 +7,23 @@ using ProductCatalog.Application.Services;
 namespace ProductCatalog.Api.Controllers.ChangeProductDescription;
 
 [ApiController]
-[ApiExplorerSettings(GroupName = "v1")]
-[Route("api/v1/products")]
 public sealed class ChangeProductDescriptionController(IProductApplicationService service) : ControllerBase
 {
-    /// <summary>Changes only the product description.</summary>
-    /// <param name="id">A nonempty GUID product identifier.</param>
-    /// <param name="request">The required description; null clears it. Empty strings and whitespace are preserved.</param>
-    /// <param name="cancellationToken">Cancels the operation and underlying persistence calls.</param>
-    /// <returns>No content after a successful save, or a problem response.</returns>
+    /// <summary>Update a product's description.</summary>
+    /// <param name="id">The product identifier, as a nonempty GUID.</param>
+    /// <param name="request">The new description.</param>
+    /// <param name="cancellationToken">Cancels the request.</param>
+    /// <returns>No content after the description is saved.</returns>
     /// <remarks>
-    /// Public operation. The last successful write determines the description; other product fields stay unchanged.
-    /// Unknown and duplicate body fields are rejected; property names follow MVC case-insensitive matching.
+    /// Only the description is changed. Supply description exactly once; null clears it.
+    /// Empty strings and whitespace are preserved. Additional fields are not accepted.
     /// </remarks>
-    /// <response code="204">The description was saved; the response has no body.</response>
-    /// <response code="400">The body or ID is invalid.</response>
-    /// <response code="404">The product does not exist.</response>
-    /// <response code="415">The request media type is unsupported.</response>
-    /// <response code="500">An unexpected server error occurred.</response>
-    [HttpPatch("{id}")]
-    [EndpointName("ChangeProductDescriptionV1")]
+    /// <response code="204">The description was saved. The response has no body.</response>
+    /// <response code="400">The product ID or request body is invalid.</response>
+    /// <response code="404">No product exists with the specified ID.</response>
+    /// <response code="415">The request Content-Type is not application/json.</response>
+    /// <response code="500">An unexpected error occurred.</response>
+    [HttpPatch("api/v1/products/{id}", Name = "ChangeProductDescriptionV1")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]

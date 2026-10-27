@@ -4,14 +4,14 @@ using ProductCatalog.Domain;
 
 namespace ProductCatalog.Api.DTOs.ChangeProductDescription;
 
-/// <summary>Requires description; null clears it. Unknown and duplicate properties are rejected.</summary>
+/// <summary>The new product description.</summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record ChangeProductDescriptionRequest : IValidatableObject
 {
     private string? description;
     private int descriptionAssignments;
 
-    /// <summary>The exact new description; null clears it and whitespace is preserved.</summary>
+    /// <summary>Required property, at most 4000 characters; null clears the description. Empty strings and whitespace are preserved.</summary>
     [MaxLength(DomainConstants.ProductMaxDescriptionLength)]
     public required string? Description
     {
