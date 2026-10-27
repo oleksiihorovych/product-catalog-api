@@ -1,13 +1,17 @@
+using ProductCatalog.Api.Controllers.GetProductById;
+using ProductCatalog.Api.Controllers.ChangeProductDescription;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using ProductCatalog.Api.Products;
-using ProductCatalog.Application.Products;
+using Microsoft.AspNetCore.Mvc;
 using Xunit;
+using ProductCatalog.Api.DTOs.ChangeProductDescription;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Application.Services;
+using V1GetProductsController = ProductCatalog.Api.Controllers.GetProducts.V1.GetProductsController;
 
 namespace ProductCatalog.UnitTests;
 
@@ -127,7 +131,7 @@ public sealed class DescriptionContractTests
         var feature = new ControllerFeature();
         manager.PopulateFeature(feature);
         Assert.Contains(feature.Controllers, type => type.AsType() == typeof(GetProductByIdController));
-        Assert.Contains(feature.Controllers, type => type.AsType() == typeof(GetAllProductsController));
+        Assert.Contains(feature.Controllers, type => type.AsType() == typeof(V1GetProductsController));
         Assert.Contains(feature.Controllers, type => type.AsType() == typeof(ChangeProductDescriptionController));
     }
 
@@ -136,6 +140,9 @@ public sealed class DescriptionContractTests
 
     private sealed class FakeUpdateService : IProductApplicationService
     {
+        public Task<ProductPage> ListPageAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+            throw new InvalidOperationException("Unexpected paginated read.");
+
         public IAsyncEnumerable<ProductDetails> ListAllAsync(CancellationToken cancellationToken) =>
             throw new InvalidOperationException("Unexpected listing during an update scenario.");
 

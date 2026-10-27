@@ -2,11 +2,12 @@ using System.Data.SqlTypes;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProductCatalog.Api.Products;
-using ProductCatalog.Application.Products;
-using ProductCatalog.Infrastructure;
-using ProductCatalog.Infrastructure.Products;
 using Xunit;
+using ProductCatalog.Api.DTOs.Shared;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Infrastructure.Seeding;
+using ProductCatalog.Infrastructure;
 
 namespace ProductCatalog.UnitTests;
 
@@ -30,7 +31,8 @@ public sealed class GuidCatalogTests
     public async Task MockListing_ReturnsEverySeedProductInSqlGuidOrder()
     {
         var services = new ServiceCollection();
-        services.AddInfrastructure(new ConfigurationBuilder().Build());
+        services.AddInfrastructure(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Storage:Mode"] = "Mock" }).Build());
         using var provider = services.BuildServiceProvider();
         var repository = provider.GetRequiredService<IProductRepository>();
         var actual = new List<ProductDetails>();

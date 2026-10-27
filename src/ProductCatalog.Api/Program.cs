@@ -1,10 +1,16 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using ProductCatalog.Api;
 using ProductCatalog.Application;
+using ProductCatalog.Infrastructure.DbContexts;
+using ProductCatalog.Infrastructure.Seeding;
 using ProductCatalog.Infrastructure;
-using ProductCatalog.Infrastructure.Persistence;
 
-var builder = WebApplication.CreateBuilder(args);
+// Consume the standalone switch before the host parses key/value command-line arguments.
+var useMockData = args.Contains("--mock-data", StringComparer.Ordinal);
+var builder = WebApplication.CreateBuilder(args.Where(argument => argument != "--mock-data").ToArray());
+builder.Configuration["Storage:Mode"] = useMockData
+    ? "Mock"
+    : builder.Configuration["Storage:Mode"] ?? "SqlServer";
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -37,6 +43,7 @@ if (app.Environment.IsDevelopment())
     {
         options.Path = "/swagger";
         options.SwaggerRoutes.Add(new("v1", "/openapi/v1.json"));
+        options.SwaggerRoutes.Add(new("v2", "/openapi/v2.json"));
     });
 }
 

@@ -2,7 +2,7 @@
 
 A .NET 10 LTS product catalog with a complete, streamed v1 listing, product lookup by GUID,
 and SQL Server or Mock storage. Product descriptions can be updated with PATCH;
-paginated v2 listing is planned separately.
+v2 provides numbered pages without a total-count query.
 
 ## Build and run
 
@@ -15,7 +15,19 @@ dotnet test --no-build --configuration Release
 dotnet run --project src/ProductCatalog.Api --launch-profile http
 ```
 
-The default Mock mode has 23 deterministic products and requires no external services.
+SQL Server is the default storage. Set `ConnectionStrings__Catalog` before the normal
+launch; a missing connection fails startup rather than silently using demo data.
+To run without SQL Server, use the standalone `--mock-data` application switch:
+
+```sh
+dotnet run --project src/ProductCatalog.Api -- --mock-data
+```
+
+From the `src/ProductCatalog.Api` directory, use `dotnet run` for SQL or
+`dotnet run -- --mock-data` for Mock. Mock has 23 deterministic products and needs
+no external services. The switch overrides `Storage:Mode`; without it, an explicit
+`Storage__Mode` setting is still honored, otherwise SqlServer is used.
+Restart the application when changing storage; data is not copied between modes.
 Open `http://localhost:5080/swagger`; request examples are in `ProductCatalog.http`.
 
 | Route | Result |
@@ -23,9 +35,10 @@ Open `http://localhost:5080/swagger`; request examples are in `ProductCatalog.ht
 | `GET /api/v1/products` | `200`, every product ordered by ID; an empty catalog returns `[]` |
 | `GET /api/v1/products/{id}` | `200` with one product; invalid/empty GUID → `400`, unknown GUID → `404` |
 | `PATCH /api/v1/products/{id}` | Change only description; `204` with no body, invalid input → `400`, missing product → `404`, unsupported media type → `415` |
+| `GET /api/v2/products?page=1&pageSize=10` | `200` with items/page/pageSize/hasNext; invalid pagination → `400` |
 | `/health/live` | `200 Healthy`, independent of database availability |
 | `/swagger` | Local Swagger UI in Development |
-| `/openapi/v1.json` | Generated OpenAPI document in Development |
+| `/openapi/v1.json`, `/openapi/v2.json` | Separate generated OpenAPI documents in Development |
 
 Swagger/OpenAPI are disabled outside Development. NSwag provides the bundled UI;
 ASP.NET Core generates the OpenAPI document from controller signatures and DTOs.
@@ -52,7 +65,16 @@ one. There is currently no separate domain service.
 The product-specific repository exposes `ReadAllAsync` as a lazy `IAsyncEnumerable` and
 `ReadByIdAsync` as a nullable product lookup. `UpdateDescriptionAsync` writes only Description
 and reports whether a product matched. Controllers are organized by scenario:
-`GetAllProductsController`, `GetProductByIdController` and `ChangeProductDescriptionController`.
+`Controllers/GetProducts/V1/GetProductsController` and
+`Controllers/GetProducts/V2/GetProductsController` implement the two listing contracts.
+Lookup and description updates are grouped under `Controllers/GetProductById` and
+`Controllers/ChangeProductDescription`. DTOs are grouped by use case under `DTOs`,
+with shared product responses in `DTOs/Shared`.
+
+Application services and their interfaces live in `Services`, repository contracts
+in `Abstractions`, read results in `Models` and pagination rules in `Validation`.
+Domain separates `Models` from `Validation`. Infrastructure separates `Repositories`,
+`DbContexts`, `Migrations` and `Seeding`.
 It does not expose EF entities or `IQueryable` to HTTP consumers. Reads are projected without
 tracking or full-catalog materialization. The context must remain alive during enumeration.
 
@@ -79,6 +101,34 @@ Demo products use deterministic GUIDs `00000000-0000-0000-0000-000000000001` thr
 `00000000-0000-0000-0000-000000000017` (hexadecimal suffixes 1–23), names `Demo product 01` through `Demo product 23`, image URIs
 `https://example.com/products/{number}.jpg` and prices `number * 10.25`. Every third description is null;
 other descriptions are `Description for demo product {number:00}.`. The last demo product costs 235.75.
+
+### Paginated listing (v2)
+
+`GET /api/v2/products` defaults to page 1 and pageSize 10. The response is
+`{ "items": [...], "page": 1, "pageSize": 10, "hasNext": true }`.
+Each item has the same five fields as v1. Page must be at least 1; pageSize must
+be 1–100. Invalid numbers, out-of-range values and offsets above 2147483647
+return `400 ValidationProblemDetails` with `traceId`. A page beyond the end,
+or an empty catalog, returns `200` with empty items and hasNext false.
+
+SQL orders by the unique Id before applying OFFSET/FETCH and projects at most
+pageSize + 1 rows. The extra row determines hasNext and is not returned. There
+is no COUNT query, full-catalog buffering or schema change. Mock uses the same
+SQL GUID ordering and reads the current in-process snapshot. Responses use
+`Cache-Control: no-store`; the full v1 listing's concurrency policy does not apply.
+
+Offset pagination supports arbitrary page numbers, but deep pages require SQL
+to process skipped rows. Separate HTTP requests do not share a database snapshot;
+concurrent inserts/deletes can shift page boundaries. RCSI does not provide a
+snapshot spanning requests. Capacity and deep-page performance remain unmeasured.
+
+Manual check with the 23-product Mock catalog: pages 1–4 at size 10 must contain
+10/10/3/0 items with hasNext true/true/false/false. Compare their combined IDs to
+v1, which still returns all 23 items even when given pagination parameters.
+Try page=0, pageSize=101, page=abc and page=2147483647&pageSize=100: expect 400.
+PATCH the first product and request page 1 again to see the updated description.
+Swagger has separate v1/v2 documents; v2 describes only the paginated listing.
+SQL paging and its execution plan have not been verified against a live server.
 
 ### Product lookup
 
@@ -151,7 +201,9 @@ authorization is outside the current delivery scope.
 
 ## SQL Server setup
 
-Set `Storage__Mode=Mock` or `Storage__Mode=SqlServer`. SQL mode requires
+Normal startup defaults to SQL Server; `--mock-data` selects in-memory data.
+Existing `Storage__Mode=Mock` or `Storage__Mode=SqlServer` configuration remains supported,
+with `--mock-data` taking priority. SQL mode requires
 `ConnectionStrings__Catalog`, supplied through environment variables or another external
 configuration provider. Never commit credentials. Connect to an existing SQL Server instance.
 

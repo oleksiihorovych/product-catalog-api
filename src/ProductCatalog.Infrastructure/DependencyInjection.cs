@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProductCatalog.Application.Products;
-using ProductCatalog.Infrastructure.Persistence;
-using ProductCatalog.Infrastructure.Products;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Infrastructure.DbContexts;
+using ProductCatalog.Infrastructure.Repositories;
 
 namespace ProductCatalog.Infrastructure;
 
@@ -11,7 +11,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        switch (configuration["Storage:Mode"] ?? "Mock")
+        switch (configuration["Storage:Mode"] ?? "SqlServer")
         {
             case "Mock":
                 services.AddSingleton<IProductRepository, MockProductRepository>();

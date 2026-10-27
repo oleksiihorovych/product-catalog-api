@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using ProductCatalog.Api.Middleware;
-using ProductCatalog.Api.Products;
+using ProductCatalog.Api.RateLimiting;
 
 namespace ProductCatalog.Api;
 
@@ -9,7 +9,8 @@ internal static class DependencyInjection
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers();
-        services.AddOpenApi();
+        services.AddOpenApi("v1");
+        services.AddOpenApi("v2");
         services.AddHealthChecks();
 
         services.AddApiProblemDetails();
