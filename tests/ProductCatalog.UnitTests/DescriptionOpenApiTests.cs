@@ -1,9 +1,10 @@
+using ProductCatalog.Api.Controllers.GetProductById;
+using ProductCatalog.Api.Controllers.ChangeProductDescription;
 using System.Text.Json.Schema;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
-using ProductCatalog.Api.Controllers.ChangeProductDescription;
-using ProductCatalog.Api.Controllers.GetProductById;
 using ProductCatalog.Api.DTOs.ChangeProductDescription;
 using ProductCatalog.Api.DTOs.Shared;
 using V1GetProductsController = ProductCatalog.Api.Controllers.GetProducts.V1.GetProductsController;
@@ -25,6 +26,20 @@ public sealed class DescriptionOpenApiTests
             .Select(type => type!.GetValue<string>()).ToArray();
         Assert.Contains("string", types);
         Assert.Contains("null", types);
+    }
+
+    [Theory]
+    [InlineData(typeof(GetProductByIdController), nameof(GetProductByIdController.GetById), "GET", "GetProductById")]
+    [InlineData(typeof(ChangeProductDescriptionController), nameof(ChangeProductDescriptionController.ChangeDescription), "PATCH", "ChangeProductDescription")]
+    public void ControllerMetadata_ExposesLookupAndUpdateOnlyInV1(
+        Type controller, string action, string verb, string name)
+    {
+        var routes = controller.GetMethod(action)!.GetCustomAttributes(inherit: true)
+            .OfType<HttpMethodAttribute>().ToArray();
+        var route = Assert.Single(routes);
+        Assert.Equal("api/v1/products/{id}", route.Template);
+        Assert.Equal(new[] { verb }, route.HttpMethods);
+        Assert.Equal(name + "V1", route.Name);
     }
 
     [Theory]

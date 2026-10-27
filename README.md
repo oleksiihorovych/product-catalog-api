@@ -44,9 +44,19 @@ Swagger/OpenAPI are disabled outside Development. NSwag provides the bundled UI;
 ASP.NET Core generates the OpenAPI document from controller signatures and DTOs.
 Controllers declare response codes and types with `ProducesResponseType`; XML comments
 provide operation, parameter and response descriptions. Keep this convention for every
-controller. Request and response schemas are generated from DTOs.
+controller. Request and response schemas are generated from DTOs, with descriptions
+from their XML comments. A schema transformer supplies descriptions for the framework's
+ProblemDetails and ValidationProblemDetails types and their fields.
 Configure `AllowedHosts` for other hostnames
 and HTTPS when exposing the API outside the local development environment.
+
+## API versioning
+
+Select the API version through the URL path: `/api/v1` or `/api/v2`.
+Only the product listing is available in both versions: v1 returns the full JSON
+array and v2 returns a numbered page. Product lookup and description updates are
+available only in v1; v2 contains only the paginated listing. Select a version in
+Swagger to view its available operations. Updates remain visible in both listings.
 
 ## Application structure
 
