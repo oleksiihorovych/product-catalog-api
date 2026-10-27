@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
-using ProductCatalog.Application.Products;
 using Xunit;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Application.Services;
 
 namespace ProductCatalog.UnitTests;
 

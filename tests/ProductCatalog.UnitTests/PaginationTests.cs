@@ -2,11 +2,16 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProductCatalog.Api.Products;
-using ProductCatalog.Application;
-using ProductCatalog.Application.Products;
-using ProductCatalog.Infrastructure;
 using Xunit;
+using ProductCatalog.Api.DTOs.ListProducts;
+using ProductCatalog.Api.DTOs.Shared;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Application.Services;
+using ProductCatalog.Application.Validation;
+using ProductCatalog.Application;
+using ProductCatalog.Infrastructure;
+using V2GetProductsController = ProductCatalog.Api.Controllers.GetProducts.V2.GetProductsController;
 
 namespace ProductCatalog.UnitTests;
 
@@ -118,7 +123,7 @@ public sealed class PaginationTests
         using var provider = CreateProvider();
         using var scope = provider.CreateScope();
         var service = scope.ServiceProvider.GetRequiredService<IProductApplicationService>();
-        var controller = new GetProductsController(service);
+        var controller = new V2GetProductsController(service);
         var result = await controller.Get(new GetProductsRequest(), CancellationToken.None);
         var response = Assert.IsType<ProductListResponse>(Assert.IsType<OkObjectResult>(result.Result).Value);
         var expected = await service.ListPageAsync(1, 10, CancellationToken.None);

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using ProductCatalog.Api.Middleware;
-using ProductCatalog.Api.Products;
+using ProductCatalog.Api.RateLimiting;
 
 namespace ProductCatalog.Api;
 

@@ -2,11 +2,12 @@ using System.Data.SqlTypes;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProductCatalog.Api.Products;
-using ProductCatalog.Application.Products;
-using ProductCatalog.Infrastructure;
-using ProductCatalog.Infrastructure.Products;
 using Xunit;
+using ProductCatalog.Api.DTOs.Shared;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Infrastructure.Seeding;
+using ProductCatalog.Infrastructure;
 
 namespace ProductCatalog.UnitTests;
 

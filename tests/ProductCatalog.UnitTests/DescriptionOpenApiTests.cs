@@ -1,8 +1,12 @@
-using System.Text.Json;
 using System.Text.Json.Schema;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
-using ProductCatalog.Api.Products;
 using Xunit;
+using ProductCatalog.Api.Controllers.ChangeProductDescription;
+using ProductCatalog.Api.Controllers.GetProductById;
+using ProductCatalog.Api.DTOs.ChangeProductDescription;
+using ProductCatalog.Api.DTOs.Shared;
+using V1GetProductsController = ProductCatalog.Api.Controllers.GetProducts.V1.GetProductsController;
 
 namespace ProductCatalog.UnitTests;
 
@@ -24,7 +28,7 @@ public sealed class DescriptionOpenApiTests
     }
 
     [Theory]
-    [InlineData(typeof(GetAllProductsController), nameof(GetAllProductsController.GetAll), new[] { 200, 429, 500 })]
+    [InlineData(typeof(V1GetProductsController), nameof(V1GetProductsController.Get), new[] { 200, 429, 500 })]
     [InlineData(typeof(GetProductByIdController), nameof(GetProductByIdController.GetById), new[] { 200, 400, 404, 500 })]
     [InlineData(typeof(ChangeProductDescriptionController), nameof(ChangeProductDescriptionController.ChangeDescription), new[] { 204, 400, 404, 415, 500 })]
     public void ControllerMetadata_DeclaresExistingResponseContract(Type controller, string action, int[] expectedCodes)
@@ -36,7 +40,7 @@ public sealed class DescriptionOpenApiTests
         foreach (var response in responses)
         {
             var expected = response.StatusCode == 204 ? typeof(void) : response.StatusCode == 200
-                ? controller == typeof(GetAllProductsController) ? typeof(ProductResponse[]) : typeof(ProductResponse)
+                ? controller == typeof(V1GetProductsController) ? typeof(ProductResponse[]) : typeof(ProductResponse)
                 : response.StatusCode == 400 ? typeof(ValidationProblemDetails) : typeof(ProblemDetails);
             Assert.Equal(expected, response.Type);
         }

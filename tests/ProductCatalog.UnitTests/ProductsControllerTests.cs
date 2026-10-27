@@ -1,11 +1,15 @@
-using ProductCatalog.Api.Validation;
+using ProductCatalog.Api.Controllers.GetProductById;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ProductCatalog.Api.Products;
-using ProductCatalog.Application.Products;
 using Xunit;
+using ProductCatalog.Api.DTOs.Shared;
+using ProductCatalog.Api.Validation;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Application.Services;
+using ProductCatalog.Domain.Models;
+using V1GetProductsController = ProductCatalog.Api.Controllers.GetProducts.V1.GetProductsController;
 
 namespace ProductCatalog.UnitTests;
 
@@ -14,14 +18,14 @@ public sealed class ProductsControllerTests
     [Theory]
     [InlineData(TestConstants.EmptyCatalogCount)]
     [InlineData(TestConstants.CatalogProductCount)]
-    public async Task GetAll_ReturnsCompleteMappedServiceOutput(int count)
+    public async Task Get_ReturnsCompleteMappedServiceOutput(int count)
     {
         var service = new StubCatalogService(count);
-        var controller = new GetAllProductsController(service);
+        var controller = new V1GetProductsController(service);
         using var cancellation = new CancellationTokenSource();
         var actual = new List<ProductResponse>();
 
-        await foreach (var response in controller.GetAll(cancellation.Token))
+        await foreach (var response in controller.Get(cancellation.Token))
         {
             actual.Add(response);
         }

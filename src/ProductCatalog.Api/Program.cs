@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using ProductCatalog.Api;
 using ProductCatalog.Application;
+using ProductCatalog.Infrastructure.DbContexts;
+using ProductCatalog.Infrastructure.Seeding;
 using ProductCatalog.Infrastructure;
-using ProductCatalog.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 

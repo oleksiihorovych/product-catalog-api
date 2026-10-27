@@ -53,7 +53,16 @@ one. There is currently no separate domain service.
 The product-specific repository exposes `ReadAllAsync` as a lazy `IAsyncEnumerable` and
 `ReadByIdAsync` as a nullable product lookup. `UpdateDescriptionAsync` writes only Description
 and reports whether a product matched. Controllers are organized by scenario:
-`GetAllProductsController`, `GetProductByIdController` and `ChangeProductDescriptionController`.
+`Controllers/GetProducts/V1/GetProductsController` and
+`Controllers/GetProducts/V2/GetProductsController` implement the two listing contracts.
+Lookup and description updates are grouped under `Controllers/GetProductById` and
+`Controllers/ChangeProductDescription`. DTOs are grouped by use case under `DTOs`,
+with shared product responses in `DTOs/Shared`.
+
+Application services and their interfaces live in `Services`, repository contracts
+in `Abstractions`, read results in `Models` and pagination rules in `Validation`.
+Domain separates `Models` from `Validation`. Infrastructure separates `Repositories`,
+`DbContexts`, `Migrations` and `Seeding`.
 It does not expose EF entities or `IQueryable` to HTTP consumers. Reads are projected without
 tracking or full-catalog materialization. The context must remain alive during enumeration.
 

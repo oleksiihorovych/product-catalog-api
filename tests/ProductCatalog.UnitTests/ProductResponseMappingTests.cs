@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
-using ProductCatalog.Api.Products;
-using ProductCatalog.Application.Products;
 using Xunit;
+using ProductCatalog.Api.DTOs.Shared;
+using ProductCatalog.Api.Mappings;
+using ProductCatalog.Application.Models;
 
 namespace ProductCatalog.UnitTests;
 

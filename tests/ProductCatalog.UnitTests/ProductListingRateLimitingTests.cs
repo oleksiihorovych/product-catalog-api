@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using ProductCatalog.Api.Products;
 using Xunit;
+using ProductCatalog.Api.RateLimiting;
 
 namespace ProductCatalog.UnitTests;
 

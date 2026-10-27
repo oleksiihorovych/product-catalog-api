@@ -1,7 +1,9 @@
 using FluentValidation;
-using ProductCatalog.Application.Products;
-using ProductCatalog.Domain;
 using Xunit;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Application.Services;
+using ProductCatalog.Domain;
 
 namespace ProductCatalog.UnitTests;
 

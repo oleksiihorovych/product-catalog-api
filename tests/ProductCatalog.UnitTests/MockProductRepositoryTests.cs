@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using ProductCatalog.Application;
-using ProductCatalog.Application.Products;
-using ProductCatalog.Infrastructure;
 using Xunit;
+using ProductCatalog.Application.Abstractions;
+using ProductCatalog.Application.Models;
+using ProductCatalog.Application.Services;
+using ProductCatalog.Application;
+using ProductCatalog.Infrastructure;
 
 namespace ProductCatalog.UnitTests;
 
