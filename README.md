@@ -15,6 +15,82 @@ dotnet restore --locked-mode
 dotnet build --no-restore --configuration Release
 ```
 
+## Run everything with Docker Compose
+
+Install and start Docker Desktop (or Docker Engine with Compose v2 on Linux).
+The host does not need .NET or SQL Server installed. This setup is for local development:
+SQL Server Developer edition, a local `sa` account and Development-only Swagger.
+
+The host port defaults to `8080` and can be overridden with `API_PORT`.
+The SQL password (`CatalogDemo2026!`) is set directly in `compose.yaml` for this local demo. No `.env` setup is required.
+Production deployments must supply secrets outside this file. The SQL Server image
+requires acceptance of its EULA; Compose sets `ACCEPT_EULA=Y` for this local instance.
+
+Start the complete application:
+
+```sh
+docker compose up --build
+```
+
+Compose starts SQL Server, waits for a successful SQL query, runs the API image with
+`--migrate --seed`, then starts the HTTP API only if that command succeeds. The
+migration container exiting with code 0 is expected. The repeatable seed adds 23
+demo products without overwriting existing rows. A failed migration blocks API
+startup; inspect `docker compose logs migrate db`, fix the cause and rerun the command.
+The normal API process still does not apply migrations.
+
+- Swagger: <http://localhost:8080/swagger>
+- Full catalog: <http://localhost:8080/api/v1/products>
+- Page: <http://localhost:8080/api/v2/products?page=1&pageSize=10>
+- Liveness: <http://localhost:8080/health/live> (process only, not SQL readiness).
+
+Only the API port is published, on the host loopback interface. SQL is reachable
+inside the Compose network at `db:1433`. To use another host port without editing files:
+
+```sh
+# Bash / zsh
+API_PORT=9090 docker compose up --build
+```
+
+```powershell
+# PowerShell
+$env:API_PORT = '9090'
+docker compose up --build
+```
+
+Swagger is then available at <http://localhost:9090/swagger>. The port inside the
+API container remains 8080. With plain `docker run`, choose the host port using
+`-p 9090:8080`.
+The API image uses a multi-stage Release build with locked NuGet restore and runs
+as the non-root .NET `app` user.
+
+Useful commands:
+
+```sh
+docker compose ps -a
+docker compose logs -f api
+docker compose down
+```
+
+`down` removes containers and the network, while the named `catalog-data` volume
+preserves the database. Start again with `docker compose up --build`. To deliberately
+delete all local database data and reseed on the next start, use `docker compose down -v`.
+Changing the password in `compose.yaml` does not change an existing database login: retain
+the original password or explicitly change the SQL login (keep the connection string
+and `MSSQL_SA_PASSWORD` in sync); reset the volume only if
+its data can be discarded. Volumes are persistence, not backups.
+
+**Architecture limitation:** SQL Server runs as `linux/amd64`. On Apple Silicon,
+Docker Desktop needs amd64 emulation; Microsoft does not test or support SQL Server
+under Rosetta/QEMU. A successful local run there is not evidence of supported
+production deployment. Use an x86-64 Linux Docker host for a supported SQL container
+architecture. See [Microsoft's SQL container requirements](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-deployment).
+
+Manual review checklist (separate from unit tests): start on a fresh volume, confirm
+23 products and v2 pages of 10/10/3, PATCH a description, run `down` and start again,
+and confirm the change persists and seed rows are not duplicated. Check Swagger
+and the migration logs. Never reset a volume containing data you need.
+
 ## Run locally
 
 ### SQL mode (default)
