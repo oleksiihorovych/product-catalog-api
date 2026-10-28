@@ -13,8 +13,7 @@ Supports two versions of local run:
   is needed; changes reset when the API process restarts.
 
 Run all commands from the **repository root**, `product-catalog-api`, containing
-`ProductCatalog.slnx` and `compose.yaml`. Environment examples use Bash/zsh;
-a PowerShell equivalent is included for the local SQL configuration.
+`ProductCatalog.slnx` and `compose.yaml`. Environment examples use Bash/zsh.
 
 All four options below open Swagger at <http://localhost:5080/swagger>. Run one
 option at a time so port `5080` is free. Visual Studio or VS Code with C# support
@@ -25,10 +24,6 @@ is optional for local development.
 Prerequisites:
 
 - Docker Desktop installed and running, or Docker Engine with Compose v2 on Linux.
-- For the SQL Server container, an x86-64 Linux Docker host is the supported
-  architecture. On Apple Silicon, Docker Desktop needs amd64 emulation;
-  Microsoft does not support SQL Server under Rosetta/QEMU. See
-  [Microsoft's SQL container requirements](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-deployment).
 
 Start the API and SQL Server with one command:
 
