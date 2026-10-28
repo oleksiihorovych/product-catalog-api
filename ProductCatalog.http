@@ -1,5 +1,9 @@
 @baseUrl = http://localhost:5080
 # For Docker Compose, change baseUrl to http://localhost:8080 (or the host port set through API_PORT).
+# Use a disposable demo catalog. Before PATCH requests, copy product 1's description
+# from the lookup below into this variable as JSON, including quotes/escapes or null.
+# The placeholder intentionally prevents a restore until the original value is captured.
+@originalDescriptionJson = <paste-original-description-as-JSON>
 
 ### Full catalog: 200 OK, one JSON array, all 23 demo products (GUID suffixes 000000000001 through 000000000017)
 GET {{baseUrl}}/api/v1/products
@@ -22,7 +26,7 @@ GET {{baseUrl}}/swagger
 GET {{baseUrl}}/does-not-exist
 Accept: application/problem+json
 
-### Product lookup: 200, same fields as the corresponding catalog entry
+### Product lookup: 200; capture description as JSON in originalDescriptionJson before editing
 GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
 Accept: application/json
 
@@ -38,7 +42,7 @@ Accept: application/problem+json
 GET {{baseUrl}}/api/v1/products/abc
 Accept: application/problem+json
 
-### Null description: 200, description is null
+### Product 3: 200; a fresh seed has a storage-labelled description
 GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000003
 Accept: application/json
 
@@ -65,6 +69,10 @@ PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
 Content-Type: application/json
 
 {"description":null}
+
+### Read after clear: 200, description is null
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Accept: application/json
 
 ### Missing product: 404 ProblemDetails
 PATCH {{baseUrl}}/api/v1/products/ffffffff-ffff-ffff-ffff-ffffffffffff
@@ -126,11 +134,15 @@ Content-Type: application/json
 
 {"description":"Manual review"}
 
-### Restore product 1 to its initial demo description: 204 No Content
+### Restore product 1's captured description: 204 (set originalDescriptionJson first)
 PATCH {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
 Content-Type: application/json
 
-{"description":"Description for demo product 01."}
+{"description":{{originalDescriptionJson}}}
+
+### Read after restore: 200, description matches the value captured before editing
+GET {{baseUrl}}/api/v1/products/00000000-0000-0000-0000-000000000001
+Accept: application/json
 
 ### v2 defaults: 10 products, page 1, pageSize 10, hasNext true
 GET {{baseUrl}}/api/v2/products
