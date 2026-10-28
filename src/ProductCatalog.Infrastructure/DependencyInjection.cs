@@ -31,8 +31,11 @@ public static class DependencyInjection
     private static IServiceCollection AddSqlCatalogStorage(
         this IServiceCollection services, IConfiguration configuration)
     {
-        var connection = configuration.GetConnectionString("Catalog")
-            ?? throw new InvalidOperationException("SqlServer mode requires ConnectionStrings:Catalog.");
+        var connection = configuration.GetConnectionString("Catalog");
+        if (string.IsNullOrWhiteSpace(connection))
+        {
+            throw new InvalidOperationException("SqlServer mode requires ConnectionStrings:Catalog.");
+        }
 
         services.AddDbContext<CatalogDbContext>(options => options.UseSqlServer(connection,
             sql => sql.CommandTimeout(120)));
