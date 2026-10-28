@@ -11,7 +11,7 @@ directory, run `cd product-catalog-api` first.
 | Mode | Host requirements | Swagger |
 | --- | --- | --- |
 | Mock — quickest start | .NET SDK **10.0.402**; no SQL Server or Docker | <http://localhost:5080/swagger> |
-| Docker Compose — API + SQL | Docker Desktop, or Docker Engine with Compose v2; no host .NET SDK or SQL installation | <http://localhost:8080/swagger> |
+| Docker Compose — API + SQL | Docker Desktop, or Docker Engine with Compose v2; no host .NET SDK or SQL installation | <http://localhost:5080/swagger> |
 | Local API + existing SQL Server | .NET SDK **10.0.402** and a SQL Server connection | <http://localhost:5080/swagger> |
 
 The SDK is pinned in [global.json](global.json). Visual Studio or VS Code with C#
@@ -48,7 +48,8 @@ Install and start Docker Desktop (or Docker Engine with Compose v2 on Linux).
 The host does not need .NET or SQL Server installed. This setup is for local development:
 SQL Server Developer edition, a local `sa` account and Development-only Swagger.
 
-The host port defaults to `8080` and can be overridden with `API_PORT`.
+The host port defaults to `5080`, matching local execution, and can be overridden
+with `API_PORT`. Stop any locally running API before starting Compose on the same port.
 The SQL password (`CatalogDemo2026!`) is set directly in `compose.yaml` for this local demo. No `.env` setup is required.
 Production deployments must supply secrets outside this file. The SQL Server image
 requires acceptance of its EULA; Compose sets `ACCEPT_EULA=Y` for this local instance.
@@ -69,7 +70,7 @@ demo products without overwriting existing rows. A failed migration blocks API
 startup; inspect `docker compose logs migrate db`, fix the cause and rerun the command.
 The normal API process still does not apply migrations.
 
-The application OpenAPI specification will be available at <http://localhost:8080/swagger>.
+The application OpenAPI specification will be available at <http://localhost:5080/swagger>.
 
 Only the API port is published, on the host loopback interface. SQL is reachable
 inside the Compose network at `db:1433`. To use another host port without editing files:
@@ -87,7 +88,7 @@ docker compose up --build
 
 Swagger is then available at <http://localhost:9090/swagger>. The port inside the
 API container remains 8080. With plain `docker run`, choose the host port using
-`-p 9090:8080`.
+`-p 5080:8080` for the default local URL, or `-p 9090:8080` for the alternative above.
 The API image uses a multi-stage Release build with locked NuGet restore and runs
 as the non-root .NET `app` user.
 
@@ -162,7 +163,7 @@ Normal startup does not apply migrations or seed data. Changes persist across ap
 ## API documentation
 
 The application OpenAPI specification will be available at <http://localhost:5080/swagger>.
-For Docker Compose, use <http://localhost:8080/swagger>.
+The same URL is used by default for local execution and Docker Compose.
 Swagger is available only in the Development environment, enabled by the `http`
 launch profile and the supplied Compose configuration.
 
