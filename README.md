@@ -1,7 +1,8 @@
 # Product Catalog API
 
-A .NET product catalog application with two ways to run: start the containers with
-Docker, or run the API locally with the .NET SDK. Both support two storage modes:
+A .NET product catalog application with two ways to run:
+1. Start the containers with Docker
+2. Run the API locally with the .NET SDK. Both support two storage modes:
 
 - **SQL Server (default):** products are stored in a database and changes persist
   across application restarts.
