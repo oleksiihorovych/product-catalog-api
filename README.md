@@ -118,6 +118,12 @@ Start the API in the same terminal:
 dotnet run --project src/ProductCatalog.Api --launch-profile http
 ```
 
+New SQL demo products have descriptions prefixed with `SQL mock data`; Mock-mode
+products use `in-memory mock data`. Existing SQL rows, including edited descriptions,
+are not overwritten by reseeding. To see the labels in an existing demo database,
+use a fresh database; deleting a Compose volume with `docker compose down -v` destroys
+all of its data.
+
 Normal startup does not apply migrations or seed data. Changes persist across application restarts.
 
 ### Mock mode (no database)

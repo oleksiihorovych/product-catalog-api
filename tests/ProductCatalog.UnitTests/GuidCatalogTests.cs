@@ -27,6 +27,17 @@ public sealed class GuidCatalogTests
         Assert.Equal(235.75m, first[^1].Price);
     }
 
+    [Theory]
+    [InlineData(true, "SQL mock data: ")]
+    [InlineData(false, "in-memory mock data: ")]
+    public void DemoProducts_LabelEveryDescriptionWithStorageMode(bool useSqlData, string prefix)
+    {
+        var products = DemoProducts.Create(useSqlData);
+
+        Assert.All(products, product => Assert.StartsWith(prefix, product.Description));
+        Assert.Equal(DemoProducts.Create().Select(p => p.Id), products.Select(p => p.Id));
+    }
+
     [Fact]
     public async Task MockListing_ReturnsEverySeedProductInSqlGuidOrder()
     {
