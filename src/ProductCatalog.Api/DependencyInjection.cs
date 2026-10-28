@@ -27,6 +27,7 @@ internal static class DependencyInjection
         services.AddOpenApi(version, options =>
         {
             options.AddSchemaTransformer<ProblemDetailsSchemaTransformer>();
+            options.AddSchemaTransformer<ProductResponseSchemaTransformer>();
             // Each document includes only routes belonging to its URL version.
             options.ShouldInclude = description =>
                 description.RelativePath?.StartsWith($"api/{version}/", StringComparison.OrdinalIgnoreCase) == true;
