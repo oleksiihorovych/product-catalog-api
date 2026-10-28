@@ -25,7 +25,7 @@ public static class CatalogDatabaseSetup
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-        var demo = DemoProducts.Create();
+        var demo = DemoProducts.Create(useSqlData: true);
         var ids = demo.Select(p => p.Id).ToArray();
         var existing = await db.Products
             .Where(p => ids.Contains(p.Id))

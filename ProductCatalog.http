@@ -1,4 +1,5 @@
 @baseUrl = http://localhost:5080
+# For Docker Compose, change baseUrl to http://localhost:8080 (or the host port set through API_PORT).
 
 ### Full catalog: 200 OK, one JSON array, all 23 demo products (GUID suffixes 000000000001 through 000000000017)
 GET {{baseUrl}}/api/v1/products
