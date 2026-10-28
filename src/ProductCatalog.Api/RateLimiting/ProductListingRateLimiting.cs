@@ -25,6 +25,10 @@ internal static class ProductListingRateLimiting
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = async (context, cancellationToken) =>
             {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("ProductCatalog.Api.RateLimiting");
+                logger.LogDebug("Rejected full catalog listing because the concurrency limit {ConcurrentListingLimit} was reached", limit);
+
                 var written = await context.HttpContext.RequestServices.GetRequiredService<IProblemDetailsService>()
                     .TryWriteAsync(new ProblemDetailsContext
                     {

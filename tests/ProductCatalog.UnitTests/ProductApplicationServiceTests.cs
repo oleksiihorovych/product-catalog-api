@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Runtime.CompilerServices;
 using Xunit;
 using ProductCatalog.Application.Abstractions;
@@ -17,7 +18,7 @@ public sealed class ProductApplicationServiceTests
             .Select(id => new ProductDetails(TestConstants.CatalogProductId(id), $"Product {id}", TestConstants.CollectionImageUri, TestConstants.ProductPrice, null))
             .ToArray();
         var repository = new StubRepository(expected);
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
         using var cancellation = new CancellationTokenSource();
         var actual = new List<ProductDetails>();
 
@@ -35,7 +36,7 @@ public sealed class ProductApplicationServiceTests
     public void ListAll_PropagatesRepositoryFailure()
     {
         var exception = new InvalidOperationException("storage failure");
-        var service = new ProductApplicationService(new FailingRepository(exception));
+        var service = new ProductApplicationService(new FailingRepository(exception), NullLogger<ProductApplicationService>.Instance);
 
         Assert.Same(exception, Assert.Throws<InvalidOperationException>(() => service.ListAllAsync(CancellationToken.None)));
     }
@@ -45,7 +46,7 @@ public sealed class ProductApplicationServiceTests
     {
         var expected = new ProductDetails(TestConstants.ProductId, "Product", TestConstants.CollectionImageUri, TestConstants.ProductPrice, null);
         var repository = new StubRepository([expected]);
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
         using var cancellation = new CancellationTokenSource();
 
         var actual = await service.GetByIdAsync(expected.Id, cancellation.Token);
@@ -60,7 +61,7 @@ public sealed class ProductApplicationServiceTests
     public async Task GetById_ReturnsNullWhenProductIsMissing()
     {
         var repository = new StubRepository([]);
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
 
         Assert.Null(await service.GetByIdAsync(TestConstants.ProductId, CancellationToken.None));
         Assert.Equal(1, repository.Calls);
@@ -70,7 +71,7 @@ public sealed class ProductApplicationServiceTests
     public async Task GetById_RejectsEmptyIdBeforeCallingRepository()
     {
         var repository = new StubRepository([]);
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(() => service.GetByIdAsync(Guid.Empty, CancellationToken.None));
 
@@ -82,7 +83,7 @@ public sealed class ProductApplicationServiceTests
     public async Task GetById_PropagatesRepositoryFailure()
     {
         var exception = new InvalidOperationException("storage failure");
-        var service = new ProductApplicationService(new FailingRepository(exception));
+        var service = new ProductApplicationService(new FailingRepository(exception), NullLogger<ProductApplicationService>.Instance);
 
         var actual = await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetByIdAsync(TestConstants.ProductId, CancellationToken.None));
 
@@ -95,7 +96,7 @@ public sealed class ProductApplicationServiceTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         var repository = new StubRepository([]);
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
 
         var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.GetByIdAsync(TestConstants.ProductId, cancellation.Token));
 

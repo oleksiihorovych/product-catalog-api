@@ -166,6 +166,7 @@ public sealed class MockProductRepositoryTests
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(
             new Dictionary<string, string?> { ["Storage:Mode"] = "Mock" }).Build();
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddApplication();
         services.AddInfrastructure(configuration);
         return services.BuildServiceProvider();

@@ -9,7 +9,19 @@ internal static class DependencyInjection
 {
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddControllers();
+        services.AddControllers().ConfigureApiBehaviorOptions(options =>
+        {
+            var defaultFactory = options.InvalidModelStateResponseFactory;
+            options.InvalidModelStateResponseFactory = context =>
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("ProductCatalog.Api.Validation");
+                // Model errors can contain submitted values; record only the number of invalid fields.
+                logger.LogDebug("Rejected invalid API request with {InvalidFieldCount} invalid fields",
+                    context.ModelState.Count(field => field.Value?.Errors.Count > 0));
+                return defaultFactory(context);
+            };
+        });
         AddVersionedOpenApi(services, "v1");
         AddVersionedOpenApi(services, "v2");
         services.AddHealthChecks();

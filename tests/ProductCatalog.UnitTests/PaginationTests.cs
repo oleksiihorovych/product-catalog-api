@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -56,7 +57,7 @@ public sealed class PaginationTests
     public async Task ListPage_RejectsInvalidParametersBeforeCallingRepository(int page, int size)
     {
         var repository = new StubRepository();
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => service.ListPageAsync(page, size, CancellationToken.None));
         Assert.Equal(0, repository.Calls);
         var request = new GetProductsRequest { Page = page, PageSize = size };
@@ -74,7 +75,7 @@ public sealed class PaginationTests
     public async Task ListPage_ForwardsArgumentsAndReturnsEmptyRepositoryPage()
     {
         var repository = new StubRepository();
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
         using var cancellation = new CancellationTokenSource();
         var result = await service.ListPageAsync(2, 100, cancellation.Token);
         Assert.Same(repository.Result, result);
@@ -89,7 +90,7 @@ public sealed class PaginationTests
     {
         var failure = new InvalidOperationException("Storage failed");
         var repository = new StubRepository { Failure = failure };
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
         Assert.Same(failure, await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.ListPageAsync(1, 10, CancellationToken.None)));
         repository.Failure = new OperationCanceledException();
@@ -103,7 +104,7 @@ public sealed class PaginationTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            new ProductApplicationService(repository).ListPageAsync(1, 10, cancellation.Token));
+            new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance).ListPageAsync(1, 10, cancellation.Token));
         Assert.Equal(0, repository.Calls);
     }
 
@@ -153,6 +154,7 @@ public sealed class PaginationTests
     private static ServiceProvider CreateProvider()
     {
         var services = new ServiceCollection();
+        services.AddLogging();
         services.AddApplication();
         services.AddInfrastructure(new ConfigurationBuilder().AddInMemoryCollection(
             new Dictionary<string, string?> { ["Storage:Mode"] = "Mock" }).Build());

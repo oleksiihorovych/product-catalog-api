@@ -11,7 +11,8 @@ internal sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) :
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "An unhandled exception occurred while processing the request");
+        logger.LogError(exception, "Unhandled exception processing {HttpMethod} {RequestPath}; trace ID: {TraceId}",
+            httpContext.Request.Method, httpContext.Request.Path.Value, Activity.Current?.Id ?? httpContext.TraceIdentifier);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
