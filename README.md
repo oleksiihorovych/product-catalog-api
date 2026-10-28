@@ -179,6 +179,21 @@ dotnet test --no-restore --configuration Release
 Unit tests use isolated fakes and in-memory data and require no SQL Server,
 Docker or other external services.
 
+## Continuous integration
+
+[CI](.github/workflows/ci.yml) runs on pull requests targeting `main` and pushes
+to `main`. Once the workflow is on the default branch, it can also be started
+manually from GitHub Actions.
+
+The workflow installs the SDK from `global.json`, caches NuGet packages using the
+lock files, restores with `--locked-mode`, builds Release, runs only
+`ProductCatalog.UnitTests`, and builds the Docker image for `linux/amd64`.
+Test failures fail the job. The `unit-test-results` artifact contains TRX reports
+when produced, including failed test runs, and is retained for seven days.
+
+CI needs no database or repository secrets. The Docker step checks that the image
+builds; image publication and deployment are outside this workflow.
+
 ## Frameworks and libraries
 
 | Technology | Purpose |
