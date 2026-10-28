@@ -1,171 +1,202 @@
 # Product Catalog API
 
-A .NET product catalog application with SQL Server persistence and an optional in-memory demo mode.
+A .NET product catalog application with two ways to run: start the containers with
+Docker, or run the API locally with the .NET SDK. Both support two storage modes:
 
-## Choose how to run
+- **SQL Server (default):** products are stored in a database and changes persist
+  across application restarts.
+- **Mock:** 23 demo products are kept in memory. No database or connection string
+  is needed; changes reset when the API process restarts.
 
-Run commands from the **repository root**: the `product-catalog-api` directory
-containing `ProductCatalog.slnx` and `compose.yaml`. If you are in its parent
-directory, run `cd product-catalog-api` first.
+Run all commands from the **repository root**, `product-catalog-api`, containing
+`ProductCatalog.slnx` and `compose.yaml`. Environment examples use Bash/zsh;
+a PowerShell equivalent is included for the local SQL configuration.
 
-| Mode | Host requirements | Swagger |
-| --- | --- | --- |
-| Mock — quickest start | .NET SDK **10.0.402**; no SQL Server or Docker | <http://localhost:5080/swagger> |
-| Docker Compose — API + SQL | Docker Desktop, or Docker Engine with Compose v2; no host .NET SDK or SQL installation | <http://localhost:5080/swagger> |
-| Local API + existing SQL Server | .NET SDK **10.0.402** and a SQL Server connection | <http://localhost:5080/swagger> |
+All four options below open Swagger at <http://localhost:5080/swagger>. Run one
+option at a time so port `5080` is free. Visual Studio or VS Code with C# support
+is optional for local development.
 
-The SDK is pinned in [global.json](global.json). Visual Studio or VS Code with C#
-support is optional. Environment examples use Bash/zsh; use equivalent settings in
-PowerShell or your IDE.
+## Docker: SQL Server (default)
 
-## Quick start: Mock mode (no database)
+Prerequisites:
 
-With the .NET SDK installed, run:
+- Docker Desktop installed and running, or Docker Engine with Compose v2 on Linux.
+- For the SQL Server container, an x86-64 Linux Docker host is the supported
+  architecture. On Apple Silicon, Docker Desktop needs amd64 emulation;
+  Microsoft does not support SQL Server under Rosetta/QEMU. See
+  [Microsoft's SQL container requirements](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-deployment).
 
-```sh
-dotnet restore --locked-mode
-dotnet run --project src/ProductCatalog.Api --launch-profile http -- --mock-data
-```
-
-`dotnet run` builds and starts the API. Keep the terminal running, wait for
-`Now listening on: http://localhost:5080`, then open
-<http://localhost:5080/swagger>.
-Press **Ctrl+C** to stop the API.
-
-Mock mode requires no connection string. Updates are shared within the running
-process and reset after restart. `--mock-data` overrides `Storage:Mode`; without
-the flag, SQL Server is the default. `Storage__Mode=Mock` is also supported.
-
-In an IDE, select `ProductCatalog.Api`, the `http` profile and the `--mock-data`
-argument. Restart the application to switch storage modes.
-
-If port 5080 is occupied, add `--urls http://localhost:5081` after `--mock-data`
-and use <http://localhost:5081/swagger> instead.
-
-## Run everything with Docker Compose
-
-Install and start Docker Desktop (or Docker Engine with Compose v2 on Linux).
-The host does not need .NET or SQL Server installed. This setup is for local development:
-SQL Server Developer edition, a local `sa` account and Development-only Swagger.
-
-The host port defaults to `5080`, matching local execution, and can be overridden
-with `API_PORT`. Stop any locally running API before starting Compose on the same port.
-The SQL password (`CatalogDemo2026!`) is set directly in `compose.yaml` for this local demo. No `.env` setup is required.
-Production deployments must supply secrets outside this file. The SQL Server image
-requires acceptance of its EULA; Compose sets `ACCEPT_EULA=Y` for this local instance.
-
-Start the complete application:
+Start the API and SQL Server with one command:
 
 ```sh
 docker compose up --build
 ```
 
-The first run downloads images and packages and can take several minutes. Keep
-the terminal open; **Ctrl+C** stops the foreground containers.
+The host needs neither the .NET SDK nor a separate SQL Server installation.
+Compose supplies the connection string, starts SQL Server, waits for it to become
+healthy, applies migrations, seeds 23 demo products, and starts the API. The
+migration container exiting with code `0` is expected; a failed migration blocks
+API startup. The first run downloads images and packages and can take several minutes.
 
-Compose starts SQL Server, waits for a successful SQL query, runs the API image with
-`--migrate --seed`, then starts the HTTP API only if that command succeeds. The
-migration container exiting with code 0 is expected. The repeatable seed adds 23
-demo products without overwriting existing rows. A failed migration blocks API
-startup; inspect `docker compose logs migrate db`, fix the cause and rerun the command.
-The normal API process still does not apply migrations.
-
-The application OpenAPI specification will be available at <http://localhost:5080/swagger>.
-
-Only the API port is published, on the host loopback interface. SQL is reachable
-inside the Compose network at `db:1433`. To use another host port without editing files:
+Open <http://localhost:5080/swagger> when the API starts. Press **Ctrl+C** to stop
+foreground containers. To remove the stopped containers and network, run:
 
 ```sh
-# Bash / zsh
+docker compose down
+```
+
+The named `catalog-data` volume preserves SQL data. Repeating the startup command
+adds only missing demo products and does not overwrite existing rows.
+`docker compose down -v` deliberately deletes all local database data; the next
+startup creates and seeds a fresh database. Volumes are persistence, not backups.
+
+This is a local development setup: SQL Server Developer edition, a local `sa`
+account, and Development-only Swagger. The demo password (`CatalogDemo2026!`)
+is set in `compose.yaml`; no `.env` file or host connection string is required.
+Compose accepts the SQL Server EULA with `ACCEPT_EULA=Y`. Production deployments
+must supply secrets separately. Editing the password in Compose does not update
+an existing SQL login; retain the original password or change the login and both
+Compose password settings together.
+
+Only the API port is published, bound to `127.0.0.1`. SQL Server is accessible
+inside the Compose network at `db:1433`. To use another host port:
+
+```sh
 API_PORT=9090 docker compose up --build
 ```
 
-```powershell
-# PowerShell
-$env:API_PORT = '9090'
-docker compose up --build
-```
+Then open <http://localhost:9090/swagger>. The API container listens on `8080`;
+Compose maps host port `5080` to it by default. The image uses a multi-stage
+Release build with locked NuGet restore and runs as the non-root .NET `app` user.
 
-Swagger is then available at <http://localhost:9090/swagger>. The port inside the
-API container remains 8080. With plain `docker run`, choose the host port using
-`-p 5080:8080` for the default local URL, or `-p 9090:8080` for the alternative above.
-The API image uses a multi-stage Release build with locked NuGet restore and runs
-as the non-root .NET `app` user.
-
-Useful commands:
+For startup diagnostics:
 
 ```sh
 docker compose ps -a
 docker compose logs -f api
-docker compose down
+docker compose logs migrate db
 ```
 
-`down` removes containers and the network, while the named `catalog-data` volume
-preserves the database. Start again with `docker compose up --build`. To deliberately
-delete all local database data and reseed on the next start, use `docker compose down -v`.
-Changing the password in `compose.yaml` does not change an existing database login: retain
-the original password or explicitly change the SQL login (keep the connection string
-and `MSSQL_SA_PASSWORD` in sync); reset the volume only if
-its data can be discarded. Volumes are persistence, not backups.
+## Docker: Mock data
 
-**Architecture limitation:** SQL Server runs as `linux/amd64`. On Apple Silicon,
-Docker Desktop needs amd64 emulation; Microsoft does not test or support SQL Server
-under Rosetta/QEMU. A successful local run there is not evidence of supported
-production deployment. Use an x86-64 Linux Docker host for a supported SQL container
-architecture. See [Microsoft's SQL container requirements](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-deployment).
+Prerequisites:
 
-## Run locally with SQL Server (default storage)
+- Docker Desktop installed and running, or Docker Engine with Compose v2 on Linux.
+- No SQL Server installation, connection string, or host .NET SDK is required.
 
-Install the .NET SDK and restore packages from the repository root:
+Start just the API with in-memory demo data using one command:
+
+```sh
+docker compose run --build --rm --no-deps --service-ports api --mock-data
+```
+
+`--no-deps` skips the SQL Server and migration services; `--service-ports` publishes
+the API on `5080`. The `--mock-data` argument overrides the SQL storage setting in
+Compose. The connection string in Compose is ignored in this mode.
+
+Open <http://localhost:5080/swagger>. Press **Ctrl+C** to stop the API; `--rm`
+removes this container on exit. Its data changes are lost. If you previously
+started the SQL setup, stop it with `docker compose down` before switching to
+this option. `API_PORT` can override the host port here as well.
+
+## Local: SQL Server (default)
+
+Prerequisites:
+
+- .NET SDK **10.0.402**, pinned in [global.json](global.json).
+- A running SQL Server instance reachable from your machine.
+- A connection string set as the **`ConnectionStrings__Catalog` environment
+  variable**. Database setup requires permissions to create/update the schema
+  and insert demo products.
+
+Restore dependencies:
 
 ```sh
 dotnet restore --locked-mode
 ```
 
-Set the connection string for your local test database. Replace the server, port and credentials with your values:
+Set the environment variables in the terminal where you will run the API.
+Replace the server, database name, and credentials with your own values.
+
+Bash/zsh:
 
 ```sh
 export Storage__Mode=SqlServer
 export ConnectionStrings__Catalog='Server=localhost,1433;Database=<your-db-name>;User Id=<user>;Password=<password>;Encrypt=True;TrustServerCertificate=True'
 ```
 
-For a container, use its published host port. The supplied Compose file does not
-publish SQL Server's port, so its `db:1433` address is for containers on that network
-only; it cannot be used by a host-run API. Use a separately reachable SQL instance
-for this mode. `TrustServerCertificate=True` is for trusted local development only.
-Keep credentials outside Git.
+PowerShell:
 
-Prepare the database and add sample products:
+```powershell
+$env:Storage__Mode = 'SqlServer'
+$env:ConnectionStrings__Catalog = 'Server=localhost,1433;Database=<your-db-name>;User Id=<user>;Password=<password>;Encrypt=True;TrustServerCertificate=True'
+```
+
+The double underscore maps `ConnectionStrings__Catalog` to the .NET configuration
+key `ConnectionStrings:Catalog`. Keep credentials outside Git.
+`TrustServerCertificate=True` is for trusted local development only.
+
+The supplied Compose file does not publish SQL Server's port. Its `db:1433`
+address is internal to Docker and cannot be used by a locally running API;
+use a separately reachable SQL instance for this option.
+
+Prepare the database and sample data:
 
 ```sh
 dotnet run --project src/ProductCatalog.Api --no-launch-profile -- --migrate --seed
 ```
 
-This command applies EF Core migrations, inserts **23 demo products** and exits without starting the API. Repeating it adds only missing demo IDs and does not overwrite existing products. To apply migrations without sample data, omit `--seed`. The connection needs permissions to create/update the database schema and insert products.
+This applies EF Core migrations, adds 23 demo products, and exits. Repeating it
+adds only missing demo IDs without overwriting existing rows. Omit `--seed` to
+apply migrations without sample data. Normal API startup does not run migrations
+or seed the database.
 
-Start the API in the same terminal:
+Start the API in the **same terminal**, so it inherits the environment variables:
 
 ```sh
 dotnet run --project src/ProductCatalog.Api --launch-profile http
 ```
 
 Wait for `Now listening on: http://localhost:5080`, then open
-<http://localhost:5080/swagger>. Stop with **Ctrl+C**.
+<http://localhost:5080/swagger>. Press **Ctrl+C** to stop the API. Changes are
+saved in SQL Server. New SQL demo descriptions start with `SQL mock data`;
+existing descriptions are not overwritten by reseeding.
 
-New SQL demo products have descriptions prefixed with `SQL mock data`; Mock-mode
-products use `in-memory mock data`. Existing SQL rows, including edited descriptions,
-are not overwritten by reseeding. To see the labels in an existing demo database,
-use a fresh database; deleting a Compose volume with `docker compose down -v` destroys
-all of its data.
+For an IDE launch, set `ConnectionStrings__Catalog` and `Storage__Mode=SqlServer`
+in its run configuration and select the `http` profile. Variables exported in a
+terminal are inherited only by processes launched from that terminal.
 
-Normal startup does not apply migrations or seed data. Changes persist across application restarts.
+## Local: Mock data
+
+Prerequisites:
+
+- .NET SDK **10.0.402**, pinned in [global.json](global.json).
+- No SQL Server, connection string, or Docker is required.
+
+Restore dependencies and start the API:
+
+```sh
+dotnet restore --locked-mode
+dotnet run --project src/ProductCatalog.Api --launch-profile http -- --mock-data
+```
+
+Wait for `Now listening on: http://localhost:5080`, then open
+<http://localhost:5080/swagger>. Press **Ctrl+C** to stop the API.
+
+`--mock-data` overrides `Storage:Mode`, including a SQL setting from a previous
+run. `Storage__Mode=Mock` is also supported. Mock demo descriptions start with
+`in-memory mock data`; updates are shared within the running process and reset
+on restart.
+
+In an IDE, select `ProductCatalog.Api`, the `http` profile, and the `--mock-data`
+argument. To use another local port, append `--urls http://localhost:5081` to the
+run command and open <http://localhost:5081/swagger>.
 
 ## API documentation
 
-The application OpenAPI specification will be available at <http://localhost:5080/swagger>.
-The same URL is used by default for local execution and Docker Compose.
-Swagger is available only in the Development environment, enabled by the `http`
-launch profile and the supplied Compose configuration.
+Swagger at <http://localhost:5080/swagger> describes the API contract. It is
+available only in the Development environment, enabled by the local `http`
+launch profile and the Docker commands above.
 
 ## Unit tests
 
