@@ -1,6 +1,9 @@
 # Product Catalog API
 
-A .NET product catalog application with two ways to run:
+A .NET product catalog application.
+
+Supports two versions of local run: 
+
 1. Start the containers with Docker
 2. Run the API locally with the .NET SDK. Both support two storage modes:
 
