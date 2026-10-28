@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ProductCatalog.Application.Abstractions;
 using ProductCatalog.Application.Models;
 using ProductCatalog.Application.Validation;
+using ProductCatalog.Domain.Models;
 using ProductCatalog.Infrastructure.Seeding;
 
 namespace ProductCatalog.Infrastructure.Repositories;
@@ -10,10 +11,18 @@ namespace ProductCatalog.Infrastructure.Repositories;
 internal sealed class MockProductRepository : IProductRepository
 {
     private readonly object sync = new();
-    private ProductDetails[] products = DemoProducts.Create()
-        .Select(p => new ProductDetails(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
-        .OrderBy(p => new SqlGuid(p.Id))
-        .ToArray();
+    private ProductDetails[] products;
+
+    public MockProductRepository() : this(DemoProducts.Create()) { }
+
+    /// <summary>Creates an isolated store from a snapshot of the supplied catalog.</summary>
+    internal MockProductRepository(IEnumerable<Product> initialProducts)
+    {
+        products = initialProducts
+            .Select(p => new ProductDetails(p.Id, p.Name, p.ImgUri, p.Price, p.Description))
+            .OrderBy(p => new SqlGuid(p.Id))
+            .ToArray();
+    }
 
     /// <inheritdoc/>
     public Task<ProductPage> ReadPageAsync(int page, int pageSize, CancellationToken cancellationToken)

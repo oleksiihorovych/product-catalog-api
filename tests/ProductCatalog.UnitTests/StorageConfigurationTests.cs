@@ -26,12 +26,30 @@ public sealed class StorageConfigurationTests
         Assert.Equal(ServiceLifetime.Scoped, registration.Lifetime);
     }
 
-    [Fact]
-    public void AddInfrastructure_DefaultSqlRequiresConnectionWithoutFallingBackToMock()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void AddInfrastructure_DefaultSqlRequiresConnectionWithoutFallingBackToMock(string? connection)
     {
         var services = new ServiceCollection();
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            services.AddInfrastructure(new ConfigurationBuilder().Build()));
+            services.AddInfrastructure(new ConfigurationBuilder().AddInMemoryCollection(
+                new Dictionary<string, string?> { ["ConnectionStrings:Catalog"] = connection }).Build()));
         Assert.Equal("SqlServer mode requires ConnectionStrings:Catalog.", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("sqlserver")]
+    [InlineData("Unknown")]
+    public void AddInfrastructure_RejectsUnsupportedModeWithoutRegisteringRepository(string mode)
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Storage:Mode"] = mode }).Build();
+
+        Assert.Throws<InvalidOperationException>(() => services.AddInfrastructure(configuration));
+        Assert.DoesNotContain(services, descriptor => descriptor.ServiceType == typeof(IProductRepository));
     }
 }

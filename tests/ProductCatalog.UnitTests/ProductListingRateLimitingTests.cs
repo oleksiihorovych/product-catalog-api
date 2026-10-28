@@ -12,6 +12,40 @@ namespace ProductCatalog.UnitTests;
 public sealed class ProductListingRateLimitingTests
 {
     [Theory]
+    [InlineData("0")]
+    [InlineData("-1")]
+    [InlineData("129")]
+    [InlineData("")]
+    [InlineData("four")]
+    public void Configuration_RejectsUnsupportedConcurrencyLimit(string limit)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddProductListingRateLimiting(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Catalog:MaxConcurrentListings"] = limit }).Build());
+        using var provider = services.BuildServiceProvider();
+
+        Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IOptions<RateLimiterOptions>>().Value);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("1")]
+    [InlineData("128")]
+    public void Configuration_AcceptsDefaultAndBoundaryLimits(string? limit)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddProductListingRateLimiting(new ConfigurationBuilder().AddInMemoryCollection(
+            new Dictionary<string, string?> { ["Catalog:MaxConcurrentListings"] = limit }).Build());
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider.GetRequiredService<IOptions<RateLimiterOptions>>().Value;
+        Assert.Equal(StatusCodes.Status429TooManyRequests, options.RejectionStatusCode);
+        Assert.NotNull(options.OnRejected);
+    }
+
+    [Theory]
     [InlineData(TestConstants.JsonContentType, true, TestConstants.ProblemJsonContentType, TestConstants.RateLimitProblemJson)]
     [InlineData(TestConstants.PlainTextContentType, false, TestConstants.Utf8PlainTextContentType, TestConstants.RateLimitMessage)]
     public async Task Rejection_Preserves429WhenProblemDetailsWriterIsUnavailable(
