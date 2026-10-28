@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using ProductCatalog.Infrastructure.DbContexts;
 
 namespace ProductCatalog.Infrastructure.Seeding;
@@ -10,20 +11,24 @@ public static class CatalogDatabaseSetup
     /// <summary>Applies pending migrations and optionally inserts missing demo products.</summary>
     /// <param name="db">The context configured with migration and seed permissions.</param>
     /// <param name="seed">Whether to add missing demo IDs without overwriting existing rows.</param>
+    /// <param name="logger">Records setup milestones and committed seed counts without connection details.</param>
     /// <param name="cancellationToken">Cancels migration and seed operations.</param>
     /// <remarks>
     /// HTTP startup does not call this method. Migrations run before the seed transaction;
     /// a failed seed does not roll back already applied schema changes.
     /// </remarks>
-    public static async Task InitializeAsync(CatalogDbContext db, bool seed, CancellationToken cancellationToken)
+    public static async Task InitializeAsync(CatalogDbContext db, bool seed, ILogger logger, CancellationToken cancellationToken)
     {
+        logger.LogInformation("Applying catalog database migrations");
         await db.Database.MigrateAsync(cancellationToken);
+        logger.LogInformation("Catalog database migrations completed");
 
         if (!seed)
         {
             return;
         }
 
+        logger.LogInformation("Seeding missing demo products");
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
         var demo = DemoProducts.Create(useSqlData: true);
         var ids = demo.Select(p => p.Id).ToArray();
@@ -35,5 +40,7 @@ public static class CatalogDatabaseSetup
         db.Products.AddRange(demo.Where(p => !existing.Contains(p.Id)));
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+        logger.LogInformation("Demo seed committed: {InsertedProductCount} products inserted, {ExistingProductCount} already present",
+            demo.Count - existing.Count, existing.Count);
     }
 }

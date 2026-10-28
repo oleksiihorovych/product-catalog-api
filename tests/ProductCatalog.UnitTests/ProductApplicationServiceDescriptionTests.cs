@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using FluentValidation;
 using Xunit;
 using ProductCatalog.Application.Abstractions;
@@ -17,7 +18,7 @@ public sealed class ProductApplicationServiceDescriptionTests
     public async Task ChangeDescription_PerformsOneTargetedSaveAndForwardsArguments(string? description)
     {
         var repository = new FakeRepository();
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
         using var cancellation = new CancellationTokenSource();
 
         Assert.True(await service.ChangeDescriptionAsync(TestConstants.ProductId, description, cancellation.Token));
@@ -32,7 +33,7 @@ public sealed class ProductApplicationServiceDescriptionTests
     {
         var repository = new FakeRepository { Save = _ => Task.FromResult(false) };
 
-        Assert.False(await new ProductApplicationService(repository)
+        Assert.False(await new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance)
             .ChangeDescriptionAsync(TestConstants.ProductId, null, CancellationToken.None));
         Assert.Equal(1, repository.Calls);
     }
@@ -41,7 +42,7 @@ public sealed class ProductApplicationServiceDescriptionTests
     public async Task ChangeDescription_RejectsEmptyIdBeforeSaving()
     {
         var repository = new FakeRepository();
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
 
         var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
             service.ChangeDescriptionAsync(Guid.Empty, null, CancellationToken.None));
@@ -54,7 +55,7 @@ public sealed class ProductApplicationServiceDescriptionTests
     public async Task ChangeDescription_RejectsInvalidDescriptionBeforeSaving()
     {
         var repository = new FakeRepository();
-        var service = new ProductApplicationService(repository);
+        var service = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance);
 
         var exception = await Assert.ThrowsAsync<ValidationException>(() =>
             service.ChangeDescriptionAsync(TestConstants.ProductId,
@@ -70,7 +71,7 @@ public sealed class ProductApplicationServiceDescriptionTests
         var repository = new FakeRepository();
         var description = new string('x', DomainConstants.ProductMaxDescriptionLength);
 
-        Assert.True(await new ProductApplicationService(repository)
+        Assert.True(await new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance)
             .ChangeDescriptionAsync(TestConstants.ProductId, description, CancellationToken.None));
         Assert.Equal(description, repository.Description);
     }
@@ -80,7 +81,7 @@ public sealed class ProductApplicationServiceDescriptionTests
     {
         var saved = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var repository = new FakeRepository { Save = _ => saved.Task };
-        var operation = new ProductApplicationService(repository)
+        var operation = new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance)
             .ChangeDescriptionAsync(TestConstants.ProductId, null, CancellationToken.None);
 
         Assert.False(operation.IsCompleted);
@@ -95,7 +96,7 @@ public sealed class ProductApplicationServiceDescriptionTests
         var repository = new FakeRepository { Save = _ => Task.FromException<bool>(failure) };
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            new ProductApplicationService(repository)
+            new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance)
                 .ChangeDescriptionAsync(TestConstants.ProductId, null, CancellationToken.None));
 
         Assert.Same(failure, exception);
@@ -109,7 +110,7 @@ public sealed class ProductApplicationServiceDescriptionTests
         var repository = new FakeRepository();
 
         var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            new ProductApplicationService(repository)
+            new ProductApplicationService(repository, NullLogger<ProductApplicationService>.Instance)
                 .ChangeDescriptionAsync(TestConstants.ProductId, null, cancellation.Token));
 
         Assert.Equal(cancellation.Token, exception.CancellationToken);

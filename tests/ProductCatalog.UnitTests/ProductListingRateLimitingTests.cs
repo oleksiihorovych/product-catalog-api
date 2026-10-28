@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Xunit;
 using ProductCatalog.Api.RateLimiting;
@@ -52,8 +53,9 @@ public sealed class ProductListingRateLimitingTests
         string accept, bool canWrite, string expectedContentType, string expectedBody)
     {
         var problemDetails = new StubProblemDetailsService(canWrite);
+        var logs = new RecordingLogProvider();
         var services = new ServiceCollection();
-        services.AddLogging();
+        services.AddLogging(logging => logging.SetMinimumLevel(LogLevel.Debug).AddProvider(logs));
         services.AddSingleton<IProblemDetailsService>(problemDetails);
         services.AddProductListingRateLimiting(new ConfigurationBuilder().Build());
 
@@ -86,6 +88,9 @@ public sealed class ProductListingRateLimitingTests
         using var reader = new StreamReader(body);
 
         Assert.Equal(expectedBody, await reader.ReadToEndAsync());
+        var entry = Assert.Single(logs.Entries);
+        Assert.Equal(LogLevel.Debug, entry.Level);
+        Assert.Equal(4, entry.Properties["ConcurrentListingLimit"]);
     }
 
     private sealed class StubProblemDetailsService(bool canWrite) : IProblemDetailsService

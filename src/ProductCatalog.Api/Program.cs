@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using ProductCatalog.Api;
 using ProductCatalog.Application;
+using ProductCatalog.Api.Middleware;
 using ProductCatalog.Infrastructure.DbContexts;
 using ProductCatalog.Infrastructure.Seeding;
 using ProductCatalog.Infrastructure;
@@ -17,6 +18,7 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi(builder.Configuration);
 
 var app = builder.Build();
+app.Logger.LogInformation("Application configured to use {StorageMode} storage", builder.Configuration["Storage:Mode"]);
 
 if (args.Contains("--migrate", StringComparer.Ordinal))
 {
@@ -26,11 +28,21 @@ if (args.Contains("--migrate", StringComparer.Ordinal))
     }
 
     await using var scope = app.Services.CreateAsyncScope();
-    await CatalogDatabaseSetup.InitializeAsync(scope.ServiceProvider.GetRequiredService<CatalogDbContext>(),
-        args.Contains("--seed", StringComparer.Ordinal), CancellationToken.None);
+    try
+    {
+        await CatalogDatabaseSetup.InitializeAsync(scope.ServiceProvider.GetRequiredService<CatalogDbContext>(),
+            args.Contains("--seed", StringComparer.Ordinal), app.Logger, CancellationToken.None);
+    }
+    catch (Exception exception)
+    {
+        app.Logger.LogError(exception, "Application database setup failed; completed migrations may already be applied");
+        throw;
+    }
     return;
 }
 
+// Keep the scope outside error handling so it also enriches errors during response streaming.
+app.UseMiddleware<RequestLogScopeMiddleware>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseRouting();
